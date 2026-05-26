@@ -594,3 +594,37 @@ button:focus-visible {
   color: white;
   border: 1px solid #444;
 }
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 200;
+
+  width: 100%;
+  display: flex;
+  gap: 8px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  padding: 10px 10px max(10px, env(safe-area-inset-bottom));
+
+  background: #1a1a1a;
+  border-top: 1px solid var(--border);
+
+  -webkit-overflow-scrolling: touch;
+}
+
+.bottom-nav button {
+  flex: 0 0 auto;
+  min-width: 82px;
+  min-height: 42px;
+
+  padding: 8px 10px;
+
+  background: transparent;
+  color: var(--accent);
+  font-size: 12px;
+  white-space: nowrap;
+}

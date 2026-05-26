@@ -6,6 +6,7 @@ const searchInput = document.getElementById("searchInput");
 let allTasks = [];
 let allItems = [];
 let allHideoutStations = [];
+let allTraders = [];
 
 let currentSection = "home";
 let hideCompletedItems = false;
@@ -849,19 +850,86 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-function showTraders() {
+async function showTraders() {
   currentSection = "traders";
   searchInput.style.display = "none";
   searchInput.value = "";
 
-  content.innerHTML = `
-    <h2>Marchands</h2>
+  content.innerHTML = "<p>Chargement des marchands...</p>";
 
-    <div class="card">
-      <h3>En construction</h3>
-      <p>
-        Ici on affichera les marchands, leurs objets vendus et leurs échanges.
-      </p>
+  const query = `
+    {
+      traders {
+        id
+        name
+        imageLink
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ query })
+    });
+
+    const result = await response.json();
+
+    if (result.errors) {
+      console.error(result.errors);
+      content.innerHTML = "<p>Erreur API Marchands.</p>";
+      return;
+    }
+
+    allTraders = result.data.traders;
+    displayTraders(allTraders);
+
+  } catch (error) {
+    console.error(error);
+    content.innerHTML = "<p>Impossible de charger les marchands.</p>";
+  }
+}
+
+function displayTraders(traders) {
+  content.innerHTML = "<h2>Marchands</h2>";
+
+  traders.forEach(trader => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.onclick = () => displayTraderDetails(trader);
+
+    card.innerHTML = `
+      <div class="item-card">
+        ${trader.imageLink ? `<img src="${trader.imageLink}" alt="${trader.name}">` : ""}
+        <div>
+          <h3>${trader.name}</h3>
+          <p>Voir les objets et échanges</p>
+        </div>
+      </div>
+    `;
+
+    content.appendChild(card);
+  });
+}
+
+function displayTraderDetails(trader) {
+  content.innerHTML = `
+    <button class="back-btn" onclick="displayTraders(allTraders)">
+      ← Retour
+    </button>
+
+    <div class="quest-detail">
+      <h2>${trader.name}</h2>
+
+      <div class="card">
+        <h3>En construction</h3>
+        <p>
+          Prochaine étape : afficher les objets vendus et les échanges.
+        </p>
+      </div>
     </div>
   `;
 }

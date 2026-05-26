@@ -11,6 +11,9 @@ let allTraders = [];
 let currentSection = "home";
 let hideCompletedItems = false;
 
+let selectedTraderLevel = "all";
+let traderViewMode = "sales";
+
 let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
 let completedTasks = JSON.parse(localStorage.getItem("completedTasks")) || [];
 let hideoutItemProgress = JSON.parse(localStorage.getItem("hideoutItemProgress")) || {};
@@ -105,6 +108,10 @@ function saveToCache(key, data) {
 function loadFromCache(key) {
   return JSON.parse(localStorage.getItem(key)) || null;
 }
+
+/* =========================
+   QUÊTES
+========================= */
 
 async function getQuests() {
   currentSection = "quests";
@@ -278,6 +285,10 @@ function displayQuestDetails(task) {
   `;
 }
 
+/* =========================
+   OBJETS
+========================= */
+
 async function showItems() {
   currentSection = "items";
   searchInput.style.display = "block";
@@ -391,6 +402,10 @@ function displayItemDetails(item) {
   `;
 }
 
+/* =========================
+   MAPS
+========================= */
+
 function showMaps() {
   currentSection = "maps";
   searchInput.style.display = "none";
@@ -439,6 +454,10 @@ function openMap(map) {
     </div>
   `;
 }
+
+/* =========================
+   HIDEOUT
+========================= */
 
 async function showHideout() {
   currentSection = "hideout";
@@ -649,6 +668,295 @@ function getHideoutItemProgress(itemKey) {
   return hideoutItemProgress[itemKey] || 0;
 }
 
+/* =========================
+   MARCHANDS
+========================= */
+
+async function showTraders() {
+  currentSection = "traders";
+  searchInput.style.display = "none";
+  searchInput.value = "";
+
+  content.innerHTML = "<p>Chargement des marchands...</p>";
+
+  const query = `
+    {
+      traders {
+        id
+        name
+        imageLink
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query })
+    });
+
+    const result = await response.json();
+
+    if (result.errors) {
+      console.error(result.errors);
+      content.innerHTML = "<p>Erreur API Marchands.</p>";
+      return;
+    }
+
+    allTraders = result.data.traders;
+    displayTraders(allTraders);
+  } catch (error) {
+    console.error(error);
+    content.innerHTML = "<p>Impossible de charger les marchands.</p>";
+  }
+}
+
+function displayTraders(traders) {
+  content.innerHTML = "<h2>Marchands</h2>";
+
+  traders.forEach(trader => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.onclick = () => displayTraderDetails(trader);
+
+    card.innerHTML = `
+      <div class="item-card">
+        ${trader.imageLink ? `<img src="${trader.imageLink}" alt="${trader.name}">` : ""}
+        <div>
+          <h3>${trader.name}</h3>
+          <p>Voir les objets et échanges</p>
+        </div>
+      </div>
+    `;
+
+    content.appendChild(card);
+  });
+}
+
+async function displayTraderDetails(trader) {
+  content.innerHTML = `
+    <button class="back-btn" onclick="displayTraders(allTraders)">
+      ← Retour
+    </button>
+
+    <p>Chargement des offres de ${trader.name}...</p>
+  `;
+
+  const query = `
+    {
+      traders {
+        id
+        name
+
+        cashOffers {
+          item {
+            id
+            name
+            iconLink
+          }
+          price
+          currency
+          minTraderLevel
+        }
+
+        barters {
+          level
+          requiredItems {
+            count
+            item {
+              id
+              name
+              iconLink
+            }
+          }
+          rewardItems {
+            count
+            item {
+              id
+              name
+              iconLink
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query })
+    });
+
+    const result = await response.json();
+
+    if (result.errors) {
+      console.error(result.errors);
+      content.innerHTML = "<p>Erreur API offres marchand.</p>";
+      return;
+    }
+
+    const fullTrader = result.data.traders.find(t => t.id === trader.id);
+
+    if (!fullTrader) {
+      content.innerHTML = "<p>Marchand introuvable.</p>";
+      return;
+    }
+
+    selectedTraderLevel = "all";
+    traderViewMode = "sales";
+
+    allTraders = allTraders.map(t =>
+      t.id === fullTrader.id ? fullTrader : t
+    );
+
+    displayTraderOffers(fullTrader);
+  } catch (error) {
+    console.error(error);
+    content.innerHTML = "<p>Impossible de charger les offres.</p>";
+  }
+}
+
+function displayTraderOffers(trader) {
+  const filteredOffers =
+    selectedTraderLevel === "all"
+      ? trader.cashOffers
+      : trader.cashOffers.filter(offer => offer.minTraderLevel === selectedTraderLevel);
+
+  const filteredBarters =
+    selectedTraderLevel === "all"
+      ? trader.barters
+      : trader.barters.filter(barter => barter.level === selectedTraderLevel);
+
+  content.innerHTML = `
+    <button class="back-btn" onclick="displayTraders(allTraders)">
+      ← Retour
+    </button>
+
+    <div class="quest-detail">
+      <h2>${trader.name}</h2>
+
+      <div class="trader-tabs">
+        <button onclick='setTraderViewMode("sales", "${trader.id}")'>
+          🛒 Ventes
+        </button>
+
+        <button onclick='setTraderViewMode("barters", "${trader.id}")'>
+          🔁 Échanges
+        </button>
+      </div>
+
+      <div class="trader-filters">
+        <button onclick='setTraderLevelFilter("all", "${trader.id}")'>Tous</button>
+        <button onclick='setTraderLevelFilter(1, "${trader.id}")'>LL1</button>
+        <button onclick='setTraderLevelFilter(2, "${trader.id}")'>LL2</button>
+        <button onclick='setTraderLevelFilter(3, "${trader.id}")'>LL3</button>
+        <button onclick='setTraderLevelFilter(4, "${trader.id}")'>LL4</button>
+      </div>
+
+      ${
+        traderViewMode === "sales"
+          ? `
+            <div class="detail-box">
+              <h3>Objets vendus</h3>
+
+              ${
+                filteredOffers?.length > 0
+                  ? filteredOffers.slice(0, 100).map(offer => `
+                      <div class="reward">
+                        ${offer.item?.iconLink ? `<img src="${offer.item.iconLink}" alt="${offer.item.name}">` : ""}
+
+                        <span>
+                          ${offer.item?.name || "Objet inconnu"}
+                          <br>
+                          ${offer.price || 0} ${offer.currency || ""}
+                          ${offer.minTraderLevel ? ` - LL${offer.minTraderLevel}` : ""}
+                        </span>
+                      </div>
+                    `).join("")
+                  : "<p>Aucun objet trouvé.</p>"
+              }
+            </div>
+          `
+          : ""
+      }
+
+      ${
+        traderViewMode === "barters"
+          ? `
+            <div class="detail-box">
+              <h3>Échanges</h3>
+
+              ${
+                filteredBarters?.length > 0
+                  ? filteredBarters.slice(0, 100).map(barter => `
+                      <div class="barter-card">
+
+                        <div class="barter-reward">
+                          <strong>Reçoit :</strong>
+
+                          ${
+                            barter.rewardItems?.map(reward => `
+                              <div class="reward">
+                                ${reward.item?.iconLink ? `<img src="${reward.item.iconLink}" alt="${reward.item.name}">` : ""}
+                                <span>${reward.count} x ${reward.item?.name || "Objet inconnu"}</span>
+                              </div>
+                            `).join("")
+                          }
+                        </div>
+
+                        <div class="barter-required">
+                          <strong>Donne :</strong>
+
+                          ${
+                            barter.requiredItems?.map(required => `
+                              <div class="reward">
+                                ${required.item?.iconLink ? `<img src="${required.item.iconLink}" alt="${required.item.name}">` : ""}
+                                <span>${required.count} x ${required.item?.name || "Objet inconnu"}</span>
+                              </div>
+                            `).join("")
+                          }
+                        </div>
+
+                        <p>LL${barter.level || "?"}</p>
+                      </div>
+                    `).join("")
+                  : "<p>Aucun échange trouvé.</p>"
+              }
+            </div>
+          `
+          : ""
+      }
+    </div>
+  `;
+}
+
+function setTraderViewMode(mode, traderId) {
+  traderViewMode = mode;
+
+  const trader = allTraders.find(trader => trader.id === traderId);
+
+  if (trader) {
+    displayTraderOffers(trader);
+  }
+}
+
+function setTraderLevelFilter(level, traderId) {
+  selectedTraderLevel = level;
+
+  const trader = allTraders.find(trader => trader.id === traderId);
+
+  if (trader) {
+    displayTraderOffers(trader);
+  }
+}
+
+/* =========================
+   RECHERCHE ET OUTILS
+========================= */
+
 searchInput.addEventListener("input", () => {
   const value = searchInput.value.toLowerCase();
 
@@ -791,6 +1099,10 @@ function showKappaTasks() {
   });
 }
 
+/* =========================
+   ACCUEIL
+========================= */
+
 function showHome() {
   currentSection = "home";
   searchInput.style.display = "none";
@@ -836,102 +1148,9 @@ function showHome() {
 }
 
 if ("serviceWorker" in navigator) {
-
-  navigator.serviceWorker.register(
-    "service-worker.js"
-  )
-
-  .then(() => {
-    console.log("Service Worker enregistré");
-  })
-
-  .catch(error => {
-    console.log(error);
-  });
-}
-
-async function showTraders() {
-  currentSection = "traders";
-  searchInput.style.display = "none";
-  searchInput.value = "";
-
-  content.innerHTML = "<p>Chargement des marchands...</p>";
-
-  const query = `
-    {
-      traders {
-        id
-        name
-        imageLink
-      }
-    }
-  `;
-
-  try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ query })
-    });
-
-    const result = await response.json();
-
-    if (result.errors) {
-      console.error(result.errors);
-      content.innerHTML = "<p>Erreur API Marchands.</p>";
-      return;
-    }
-
-    allTraders = result.data.traders;
-    displayTraders(allTraders);
-
-  } catch (error) {
-    console.error(error);
-    content.innerHTML = "<p>Impossible de charger les marchands.</p>";
-  }
-}
-
-function displayTraders(traders) {
-  content.innerHTML = "<h2>Marchands</h2>";
-
-  traders.forEach(trader => {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.onclick = () => displayTraderDetails(trader);
-
-    card.innerHTML = `
-      <div class="item-card">
-        ${trader.imageLink ? `<img src="${trader.imageLink}" alt="${trader.name}">` : ""}
-        <div>
-          <h3>${trader.name}</h3>
-          <p>Voir les objets et échanges</p>
-        </div>
-      </div>
-    `;
-
-    content.appendChild(card);
-  });
-}
-
-function displayTraderDetails(trader) {
-  content.innerHTML = `
-    <button class="back-btn" onclick="displayTraders(allTraders)">
-      ← Retour
-    </button>
-
-    <div class="quest-detail">
-      <h2>${trader.name}</h2>
-
-      <div class="card">
-        <h3>En construction</h3>
-        <p>
-          Prochaine étape : afficher les objets vendus et les échanges.
-        </p>
-      </div>
-    </div>
-  `;
+  navigator.serviceWorker.register("service-worker.js")
+    .then(() => console.log("Service Worker enregistré"))
+    .catch(error => console.log(error));
 }
 
 showHome();

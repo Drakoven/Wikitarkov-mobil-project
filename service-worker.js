@@ -1,10 +1,14 @@
-const CACHE_NAME = "wikitarkov-cache-v1";
+const CACHE_NAME = "wikitarkov-cache-v2";
 
 const urlsToCache = [
   "/",
   "/index.html",
   "/style.css",
-  "/app.js"
+  "/app.js",
+  "/manifest.json",
+  "/assets/background.png",
+  "/assets/icon-192.png",
+  "/assets/icon-512.png"
 ];
 
 self.addEventListener("install", event => {

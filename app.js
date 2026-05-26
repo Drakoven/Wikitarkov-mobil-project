@@ -848,4 +848,21 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+function showTraders() {
+  currentSection = "traders";
+  searchInput.style.display = "none";
+  searchInput.value = "";
+
+  content.innerHTML = `
+    <h2>Marchands</h2>
+
+    <div class="card">
+      <h3>En construction</h3>
+      <p>
+        Ici on affichera les marchands, leurs objets vendus et leurs échanges.
+      </p>
+    </div>
+  `;
+}
+
 showHome();

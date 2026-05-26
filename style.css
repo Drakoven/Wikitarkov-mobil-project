@@ -19,6 +19,7 @@
   box-sizing: border-box;
 }
 
+/* background défini une seule fois sur html, retiré de body (doublon) */
 html {
   min-height: 100%;
   background: var(--bg);
@@ -28,7 +29,6 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: Arial, Helvetica, sans-serif;
-  background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
 }
@@ -319,6 +319,12 @@ button:focus-visible {
   font-size: 18px;
 }
 
+/* =========================
+   BOTTOM NAV
+   Fusionné en un seul bloc (était défini deux fois)
+   Version finale : scrollable horizontalement sur petits écrans
+========================= */
+
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -326,21 +332,40 @@ button:focus-visible {
   z-index: 200;
   width: 100%;
   display: flex;
-  justify-content: space-around;
-  gap: 4px;
-  padding: 10px 6px max(10px, env(safe-area-inset-bottom));
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 10px 10px max(10px, env(safe-area-inset-bottom));
   background: #1a1a1a;
   border-top: 1px solid var(--border);
+  -webkit-overflow-scrolling: touch;
+  /* Cache la scrollbar sur la nav */
+  scrollbar-width: none;
+}
+
+.bottom-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .bottom-nav button {
-  flex: 1;
+  flex: 0 0 auto;
+  min-width: 72px;
   min-height: 42px;
-  padding: 8px 4px;
+  padding: 8px 10px;
   background: transparent;
   color: var(--accent);
-  font-size: 13px;
+  font-size: 12px;
+  white-space: nowrap;
 }
+
+.bottom-nav button:hover {
+  background: var(--surface-2);
+  border-radius: var(--radius);
+}
+
+/* =========================
+   MAPS
+========================= */
 
 .map-card {
   position: relative;
@@ -395,6 +420,10 @@ button:focus-visible {
   border-radius: 16px;
 }
 
+/* =========================
+   KAPPA / PROGRESS
+========================= */
+
 .kappa-progress {
   margin-bottom: 25px;
   padding: 20px;
@@ -441,6 +470,10 @@ button:focus-visible {
   margin-top: 10px;
   margin-bottom: 8px;
 }
+
+/* =========================
+   HIDEOUT
+========================= */
 
 .hideout-check {
   cursor: pointer;
@@ -492,6 +525,10 @@ button:focus-visible {
   font-size: 14px;
 }
 
+/* =========================
+   MARCHANDS
+========================= */
+
 .trader-tabs,
 .trader-filters {
   display: flex;
@@ -519,31 +556,6 @@ button:focus-visible {
   font-weight: 700;
 }
 
-.barter-card {
-  margin-bottom: 15px;
-  padding: 12px;
-  background: var(--surface-3);
-}
-
-.barter-reward,
-.barter-required {
-  margin-bottom: 12px;
-}
-
-@media (max-width: 420px) {
-  main {
-    padding-inline: 14px;
-  }
-
-  .home-overlay h1 {
-    font-size: 34px;
-  }
-
-  .bottom-nav button {
-    font-size: 12px;
-  }
-}
-
 .trader-search {
   margin-bottom: 15px;
 }
@@ -559,6 +571,21 @@ button:focus-visible {
   flex-shrink: 0;
 }
 
+.barter-card {
+  margin-bottom: 15px;
+  padding: 12px;
+  background: var(--surface-3);
+}
+
+.barter-reward,
+.barter-required {
+  margin-bottom: 12px;
+}
+
+/* =========================
+   AMMO
+========================= */
+
 .armor-green,
 .armor-yellow,
 .armor-orange,
@@ -566,21 +593,11 @@ button:focus-visible {
   font-weight: bold;
 }
 
-.armor-green {
-  color: #7ac77a !important;
-}
-
-.armor-yellow {
-  color: #d6b56d !important;
-}
-
-.armor-orange {
-  color: #e08a3e !important;
-}
-
-.armor-red {
-  color: #ff5c5c !important;
-}
+/* !important supprimés : aucune autre règle ne les écrase */
+.armor-green  { color: #7ac77a; }
+.armor-yellow { color: #d6b56d; }
+.armor-orange { color: #e08a3e; }
+.armor-red    { color: #ff5c5c; }
 
 .ammo-caliber-filter {
   margin-bottom: 15px;
@@ -595,36 +612,21 @@ button:focus-visible {
   border: 1px solid #444;
 }
 
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  z-index: 200;
+/* =========================
+   RESPONSIVE
+========================= */
 
-  width: 100%;
-  display: flex;
-  gap: 8px;
+@media (max-width: 420px) {
+  main {
+    padding-inline: 14px;
+  }
 
-  overflow-x: auto;
-  overflow-y: hidden;
+  .home-overlay h1 {
+    font-size: 34px;
+  }
 
-  padding: 10px 10px max(10px, env(safe-area-inset-bottom));
-
-  background: #1a1a1a;
-  border-top: 1px solid var(--border);
-
-  -webkit-overflow-scrolling: touch;
-}
-
-.bottom-nav button {
-  flex: 0 0 auto;
-  min-width: 82px;
-  min-height: 42px;
-
-  padding: 8px 10px;
-
-  background: transparent;
-  color: var(--accent);
-  font-size: 12px;
-  white-space: nowrap;
+  .bottom-nav button {
+    font-size: 11px;
+    min-width: 64px;
+  }
 }

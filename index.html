@@ -3,11 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Companion app Escape from Tarkov — quêtes, hideout, marchands, maps et munitions.">
+  <meta name="theme-color" content="#d6b56d">
+
   <title>WikiTarkov Mobile</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="assets/icon-192.png" />
-  <meta name="theme-color" content="#d6b56d" />
+
+  <!-- Préconnexion à l'API pour réduire la latence du premier appel -->
+  <link rel="preconnect" href="https://api.tarkov.dev">
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
 </head>
 <body>
 
@@ -18,15 +24,16 @@
 
   <main>
     <input
-      type="text"
+      type="search"
       id="searchInput"
       placeholder="Rechercher une quête, objet..."
+      aria-label="Rechercher"
     />
 
-    <section id="content"></section>
+    <section id="content" aria-live="polite"></section>
   </main>
 
-  <nav class="bottom-nav">
+  <nav class="bottom-nav" aria-label="Navigation principale">
     <button onclick="showHome()">Accueil</button>
     <button onclick="getQuests()">Quêtes</button>
     <button onclick="showItems()">Objets</button>
@@ -38,6 +45,6 @@
   </nav>
 
   <script src="app.js"></script>
-  
+
 </body>
 </html>

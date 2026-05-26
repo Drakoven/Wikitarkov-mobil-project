@@ -106,12 +106,69 @@ const mapsData = [
   }
 ];
 
+/* =========================
+   SÉCURITÉ — ÉCHAPPEMENT HTML
+   Empêche les injections XSS depuis les données API
+========================= */
+
+function escapeHTML(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+/* =========================
+   CACHE AVEC TTL (1 heure)
+   Évite de servir des données périmées après un wipe ou une MAJ API
+========================= */
+
+const CACHE_TTL = 60 * 60 * 1000; // 1 heure en millisecondes
+
 function saveToCache(key, data) {
-  localStorage.setItem(key, JSON.stringify(data));
+  const entry = {
+    timestamp: Date.now(),
+    data
+  };
+  localStorage.setItem(key, JSON.stringify(entry));
 }
 
 function loadFromCache(key) {
-  return JSON.parse(localStorage.getItem(key)) || null;
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+
+    const entry = JSON.parse(raw);
+
+    // Ancien format sans timestamp — invalide
+    if (!entry.timestamp || !entry.data) return null;
+
+    // Données expirées
+    if (Date.now() - entry.timestamp > CACHE_TTL) {
+      localStorage.removeItem(key);
+      return null;
+    }
+
+    return entry.data;
+  } catch {
+    return null;
+  }
+}
+
+/* =========================
+   DEBOUNCE
+   Evite de re-render le DOM à chaque frappe clavier
+========================= */
+
+function debounce(fn, delay) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
 }
 
 /* =========================
@@ -165,9 +222,7 @@ async function getQuests() {
   try {
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query })
     });
 
@@ -200,11 +255,10 @@ function displayQuests(tasks) {
     card.innerHTML = `
       <h3>
         ${isTaskComplete(task.id) ? "✔ " : ""}
-        ${task.name}
+        ${escapeHTML(task.name)}
         ${task.kappaRequired ? '<span class="kappa-badge">🟣 Kappa</span>' : ""}
       </h3>
-
-      <p>Marchand : ${task.trader?.name || "Inconnu"}</p>
+      <p>Marchand : ${escapeHTML(task.trader?.name) || "Inconnu"}</p>
     `;
 
     content.appendChild(card);
@@ -220,32 +274,28 @@ function displayQuestDetails(task) {
     </button>
 
     <div class="quest-detail">
-      <h2>${task.name}</h2>
+      <h2>${escapeHTML(task.name)}</h2>
 
-      ${
-        task.kappaRequired
-          ? '<div class="kappa-detail">🟣 Requise pour Kappa</div>'
-          : ""
-      }
+      ${task.kappaRequired ? '<div class="kappa-detail">🟣 Requise pour Kappa</div>' : ""}
 
       <button
         class="favorite-btn"
-        onclick='addFavorite("quête", { id: "${task.id}", name: "${task.name}" })'
+        onclick='addFavorite("quête", { id: "${escapeHTML(task.id)}", name: "${escapeHTML(task.name)}" })'
       >
         ${isFavorite(task.id) ? "⭐ Retirer des favoris" : "☆ Ajouter aux favoris"}
       </button>
 
       <button
         class="complete-btn"
-        onclick='toggleTaskComplete("${task.id}")'
+        onclick='toggleTaskComplete("${escapeHTML(task.id)}")'
       >
         ${isTaskComplete(task.id) ? "✔ Quête terminée" : "❌ Marquer comme terminée"}
       </button>
 
       <div class="detail-box">
-        <p><strong>Marchand :</strong> ${task.trader?.name || "Inconnu"}</p>
-        <p><strong>Map :</strong> ${task.map?.name || "Non précisée"}</p>
-        <p><strong>Niveau requis :</strong> ${task.minPlayerLevel || "Aucun"}</p>
+        <p><strong>Marchand :</strong> ${escapeHTML(task.trader?.name) || "Inconnu"}</p>
+        <p><strong>Map :</strong> ${escapeHTML(task.map?.name) || "Non précisée"}</p>
+        <p><strong>Niveau requis :</strong> ${escapeHTML(task.minPlayerLevel) || "Aucun"}</p>
         <p><strong>XP :</strong> ${task.experience || 0}</p>
       </div>
 
@@ -253,12 +303,11 @@ function displayQuestDetails(task) {
         <button class="section-toggle" onclick="toggleSection('objectives-section')">
           ▼ Objectifs
         </button>
-
         <div id="objectives-section">
           ${
             task.objectives?.length > 0
               ? task.objectives.map(obj => `
-                  <div class="objective">${obj.description}</div>
+                  <div class="objective">${escapeHTML(obj.description)}</div>
                 `).join("")
               : "<p>Aucun objectif trouvé.</p>"
           }
@@ -269,18 +318,13 @@ function displayQuestDetails(task) {
         <button class="section-toggle" onclick="toggleSection('rewards-section')">
           ▼ Récompenses
         </button>
-
         <div id="rewards-section">
           ${
             task.finishRewards?.items?.length > 0
               ? task.finishRewards.items.map(reward => `
                   <div class="reward">
-                    ${
-                      reward.item.iconLink
-                        ? `<img src="${reward.item.iconLink}" alt="${reward.item.name}">`
-                        : ""
-                    }
-                    <span>${reward.count} x ${reward.item.name}</span>
+                    ${reward.item.iconLink ? `<img src="${escapeHTML(reward.item.iconLink)}" alt="${escapeHTML(reward.item.name)}" loading="lazy">` : ""}
+                    <span>${reward.count} x ${escapeHTML(reward.item.name)}</span>
                   </div>
                 `).join("")
               : "<p>Aucune récompense trouvée.</p>"
@@ -292,14 +336,11 @@ function displayQuestDetails(task) {
         <button class="section-toggle" onclick="toggleSection('requirements-section')">
           ▼ Quêtes précédentes
         </button>
-
         <div id="requirements-section">
           ${
             task.taskRequirements?.length > 0
               ? task.taskRequirements.map(req => `
-                  <div class="objective">
-                    ${req.task?.name || "Quête inconnue"}
-                  </div>
+                  <div class="objective">${escapeHTML(req.task?.name) || "Quête inconnue"}</div>
                 `).join("")
               : "<p>Aucune quête précédente requise.</p>"
           }
@@ -310,18 +351,13 @@ function displayQuestDetails(task) {
         <button class="section-toggle" onclick="toggleSection('unlocked-section')">
           ▼ Quêtes débloquées
         </button>
-
         <div id="unlocked-section">
           ${
             unlockedTasks.length > 0
               ? unlockedTasks.map(unlocked => `
                   <div class="objective">
-                    ${unlocked.name}
-                    ${
-                      unlocked.kappaRequired
-                        ? '<span class="kappa-badge">🟣 Kappa</span>'
-                        : ""
-                    }
+                    ${escapeHTML(unlocked.name)}
+                    ${unlocked.kappaRequired ? '<span class="kappa-badge">🟣 Kappa</span>' : ""}
                   </div>
                 `).join("")
               : "<p>Aucune quête débloquée trouvée.</p>"
@@ -371,9 +407,7 @@ async function showItems() {
   try {
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query })
     });
 
@@ -398,6 +432,7 @@ async function showItems() {
 function displayItems(items) {
   content.innerHTML = "<h2>Objets</h2>";
 
+  // Limite à 100 résultats pour les performances
   items.slice(0, 100).forEach(item => {
     const card = document.createElement("div");
     card.className = "card";
@@ -405,11 +440,10 @@ function displayItems(items) {
 
     card.innerHTML = `
       <div class="item-card">
-        <img src="${item.iconLink}" alt="${item.name}">
-
+        <img src="${escapeHTML(item.iconLink)}" alt="${escapeHTML(item.name)}" loading="lazy">
         <div>
-          <h3>${item.name}</h3>
-          <p>${item.category?.name || "Inconnu"}</p>
+          <h3>${escapeHTML(item.name)}</h3>
+          <p>${escapeHTML(item.category?.name) || "Inconnu"}</p>
           <p>${item.avg24hPrice || 0}₽</p>
         </div>
       </div>
@@ -426,21 +460,20 @@ function displayItemDetails(item) {
     </button>
 
     <div class="quest-detail">
-      <h2>${item.name}</h2>
+      <h2>${escapeHTML(item.name)}</h2>
 
       <button
         class="favorite-btn"
-        onclick='addFavorite("objet", { id: "${item.id}", name: "${item.name}" })'
+        onclick='addFavorite("objet", { id: "${escapeHTML(item.id)}", name: "${escapeHTML(item.name)}" })'
       >
         ${isFavorite(item.id) ? "⭐ Retirer des favoris" : "☆ Ajouter aux favoris"}
       </button>
 
       <div class="detail-box item-detail-header">
-        <img src="${item.imageLink || item.iconLink}" alt="${item.name}">
-
+        <img src="${escapeHTML(item.imageLink || item.iconLink)}" alt="${escapeHTML(item.name)}" loading="lazy">
         <div>
-          <p><strong>Nom court :</strong> ${item.shortName || "N/A"}</p>
-          <p><strong>Catégorie :</strong> ${item.category?.name || "Inconnu"}</p>
+          <p><strong>Nom court :</strong> ${escapeHTML(item.shortName) || "N/A"}</p>
+          <p><strong>Catégorie :</strong> ${escapeHTML(item.category?.name) || "Inconnu"}</p>
           <p><strong>Prix moyen :</strong> ${item.avg24hPrice || 0}₽</p>
         </div>
       </div>
@@ -453,7 +486,7 @@ function displayItemDetails(item) {
 
       <div class="detail-box">
         <h3>Description</h3>
-        <p>${item.description || "Aucune description"}</p>
+        <p>${escapeHTML(item.description) || "Aucune description"}</p>
       </div>
     </div>
   `;
@@ -477,12 +510,11 @@ function showMaps() {
 
     card.innerHTML = `
       <div class="map-preview">
-        <img src="${map.image}" alt="${map.name}">
+        <img src="${escapeHTML(map.image)}" alt="${escapeHTML(map.name)}" loading="lazy">
       </div>
-
-      <h3>${map.name}</h3>
-      <p><strong>Difficulté :</strong> ${map.difficulty}</p>
-      <p><strong>Boss :</strong> ${map.boss}</p>
+      <h3>${escapeHTML(map.name)}</h3>
+      <p><strong>Difficulté :</strong> ${escapeHTML(map.difficulty)}</p>
+      <p><strong>Boss :</strong> ${escapeHTML(map.boss)}</p>
     `;
 
     content.appendChild(card);
@@ -499,21 +531,19 @@ function openMap(map) {
     </button>
 
     <div class="quest-detail">
-      <h2>${map.name}</h2>
+      <h2>${escapeHTML(map.name)}</h2>
 
       <div class="detail-box">
-        <p><strong>Difficulté :</strong> ${map.difficulty}</p>
-        <p><strong>Boss :</strong> ${map.boss}</p>
-        <p><strong>Utilité :</strong> ${map.use}</p>
+        <p><strong>Difficulté :</strong> ${escapeHTML(map.difficulty)}</p>
+        <p><strong>Boss :</strong> ${escapeHTML(map.boss)}</p>
+        <p><strong>Utilité :</strong> ${escapeHTML(map.use)}</p>
       </div>
 
       <div class="detail-box">
         <h3>Extracts principales</h3>
-        ${
-          map.extracts.map(extract => `
-            <div class="objective">${extract}</div>
-          `).join("")
-        }
+        ${map.extracts.map(extract => `
+          <div class="objective">${escapeHTML(extract)}</div>
+        `).join("")}
       </div>
     </div>
   `;
@@ -553,9 +583,7 @@ async function showHideout() {
   try {
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query })
     });
 
@@ -591,16 +619,9 @@ function getHideoutStationProgress(station) {
     });
   });
 
-  const percent =
-    total > 0
-      ? Math.round((completed / total) * 100)
-      : 0;
+  const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  return {
-    completed,
-    total,
-    percent
-  };
+  return { completed, total, percent };
 }
 
 function displayHideoutStations(stations) {
@@ -614,14 +635,12 @@ function displayHideoutStations(stations) {
     card.onclick = () => displayHideoutDetails(station);
 
     card.innerHTML = `
-      <h3>${station.name}</h3>
+      <h3>${escapeHTML(station.name)}</h3>
       <p>${station.levels.length} niveaux</p>
       <p>${progress.completed} / ${progress.total} requis</p>
-
       <div class="progress-bar mini-progress">
         <div class="progress-fill" style="width: ${progress.percent}%;"></div>
       </div>
-
       <p>${progress.percent}%</p>
     `;
 
@@ -636,17 +655,13 @@ function displayHideoutDetails(station) {
     </button>
 
     <div class="quest-detail">
-      <h2>${station.name}</h2>
+      <h2>${escapeHTML(station.name)}</h2>
 
       <button
         class="favorite-btn"
-        onclick='hideCompletedItems = !hideCompletedItems; displayHideoutDetails(allHideoutStations.find(s => s.id === "${station.id}"))'
+        onclick='hideCompletedItems = !hideCompletedItems; displayHideoutDetails(allHideoutStations.find(s => s.id === "${escapeHTML(station.id)}"))'
       >
-        ${
-          hideCompletedItems
-            ? "👁 Afficher tous les objets"
-            : "🎯 Afficher uniquement les objets manquants"
-        }
+        ${hideCompletedItems ? "👁 Afficher tous les objets" : "🎯 Afficher uniquement les objets manquants"}
       </button>
 
       ${
@@ -660,7 +675,6 @@ function displayHideoutDetails(station) {
                     .filter(req => {
                       const itemKey = `${station.id}-${level.level}-${req.item.id}`;
                       const currentAmount = getHideoutItemProgress(itemKey);
-
                       return !hideCompletedItems || currentAmount < req.count;
                     })
                     .map(req => {
@@ -670,37 +684,33 @@ function displayHideoutDetails(station) {
 
                       return `
                         <div class="reward hideout-requirement">
-                          ${
-                            req.item.iconLink
-                              ? `<img src="${req.item.iconLink}" alt="${req.item.name}">`
-                              : ""
-                          }
+                          ${req.item.iconLink ? `<img src="${escapeHTML(req.item.iconLink)}" alt="${escapeHTML(req.item.name)}" loading="lazy">` : ""}
 
                           <div class="hideout-progress">
-                            <span class="hideout-item-name">${req.item.name}</span>
+                            <span class="hideout-item-name">${escapeHTML(req.item.name)}</span>
 
                             <div class="hideout-controls">
                               ${
                                 maxAmount > 100
                                   ? `
-                                    <button class="qty-btn small-btn" onclick='event.stopPropagation(); changeHideoutItem("${itemKey}", -10000, "${station.id}", ${maxAmount})'>-10k</button>
-                                    <button class="qty-btn small-btn" onclick='event.stopPropagation(); changeHideoutItem("${itemKey}", -1000, "${station.id}", ${maxAmount})'>-1k</button>
+                                    <button class="qty-btn small-btn" onclick='event.stopPropagation(); changeHideoutItem("${itemKey}", -10000, "${escapeHTML(station.id)}", ${maxAmount})'>-10k</button>
+                                    <button class="qty-btn small-btn" onclick='event.stopPropagation(); changeHideoutItem("${itemKey}", -1000, "${escapeHTML(station.id)}", ${maxAmount})'>-1k</button>
                                   `
                                   : `
-                                    <button class="qty-btn" onclick='event.stopPropagation(); changeHideoutItem("${itemKey}", -1, "${station.id}", ${maxAmount})'>-</button>
+                                    <button class="qty-btn" onclick='event.stopPropagation(); changeHideoutItem("${itemKey}", -1, "${escapeHTML(station.id)}", ${maxAmount})'>-</button>
                                   `
                               }
 
-                              <span class="qty-display">${currentAmount} / ${maxAmount}</span>
+                              <span class="qty-display" id="qty-${itemKey}">${currentAmount} / ${maxAmount}</span>
 
                               ${
                                 maxAmount > 100
                                   ? `
-                                    <button class="qty-btn small-btn" onclick='event.stopPropagation(); changeHideoutItem("${itemKey}", 1000, "${station.id}", ${maxAmount})'>+1k</button>
-                                    <button class="qty-btn small-btn" onclick='event.stopPropagation(); changeHideoutItem("${itemKey}", 10000, "${station.id}", ${maxAmount})'>+10k</button>
+                                    <button class="qty-btn small-btn" onclick='event.stopPropagation(); changeHideoutItem("${itemKey}", 1000, "${escapeHTML(station.id)}", ${maxAmount})'>+1k</button>
+                                    <button class="qty-btn small-btn" onclick='event.stopPropagation(); changeHideoutItem("${itemKey}", 10000, "${escapeHTML(station.id)}", ${maxAmount})'>+10k</button>
                                   `
                                   : `
-                                    <button class="qty-btn" onclick='event.stopPropagation(); changeHideoutItem("${itemKey}", 1, "${station.id}", ${maxAmount})'>+</button>
+                                    <button class="qty-btn" onclick='event.stopPropagation(); changeHideoutItem("${itemKey}", 1, "${escapeHTML(station.id)}", ${maxAmount})'>+</button>
                                   `
                               }
                             </div>
@@ -724,23 +734,15 @@ function changeHideoutItem(itemKey, amount, stationId, max) {
 
   hideoutItemProgress[itemKey] += amount;
 
-  if (hideoutItemProgress[itemKey] < 0) {
-    hideoutItemProgress[itemKey] = 0;
-  }
-
-  if (hideoutItemProgress[itemKey] > max) {
-    hideoutItemProgress[itemKey] = max;
-  }
+  if (hideoutItemProgress[itemKey] < 0) hideoutItemProgress[itemKey] = 0;
+  if (hideoutItemProgress[itemKey] > max) hideoutItemProgress[itemKey] = max;
 
   saveHideoutProgress();
-  refreshHideoutStation(stationId);
-}
 
-function refreshHideoutStation(stationId) {
-  const station = allHideoutStations.find(station => station.id === stationId);
-
-  if (station) {
-    displayHideoutDetails(station);
+  // Mise à jour ciblée — on ne reconstruit pas toute la vue
+  const display = document.getElementById(`qty-${itemKey}`);
+  if (display) {
+    display.textContent = `${hideoutItemProgress[itemKey]} / ${max}`;
   }
 }
 
@@ -754,6 +756,7 @@ function getHideoutItemProgress(itemKey) {
 
 /* =========================
    MARCHANDS
+   Requête filtrée : on ne charge que le trader demandé
 ========================= */
 
 async function showTraders() {
@@ -776,9 +779,7 @@ async function showTraders() {
   try {
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query })
     });
 
@@ -809,14 +810,9 @@ function displayTraders(traders) {
 
     card.innerHTML = `
       <div class="item-card">
-        ${
-          trader.imageLink
-            ? `<img src="${trader.imageLink}" alt="${trader.name}">`
-            : ""
-        }
-
+        ${trader.imageLink ? `<img src="${escapeHTML(trader.imageLink)}" alt="${escapeHTML(trader.name)}" loading="lazy">` : ""}
         <div>
-          <h3>${trader.name}</h3>
+          <h3>${escapeHTML(trader.name)}</h3>
           <p>Voir les objets et échanges</p>
         </div>
       </div>
@@ -831,16 +827,16 @@ async function displayTraderDetails(trader) {
     <button class="back-btn" onclick="displayTraders(allTraders)">
       ← Retour
     </button>
-
-    <p>Chargement des offres de ${trader.name}...</p>
+    <p>Chargement des offres de ${escapeHTML(trader.name)}...</p>
   `;
 
+  // OPTIMISATION : on filtre directement par ID côté API
+  // L'ancienne version chargeait TOUS les traders pour n'en utiliser qu'un
   const query = `
     {
-      traders {
+      traders(id: "${trader.id}") {
         id
         name
-
         cashOffers {
           item {
             id
@@ -851,7 +847,6 @@ async function displayTraderDetails(trader) {
           currency
           minTraderLevel
         }
-
         barters {
           level
           requiredItems {
@@ -878,9 +873,7 @@ async function displayTraderDetails(trader) {
   try {
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query })
     });
 
@@ -892,7 +885,7 @@ async function displayTraderDetails(trader) {
       return;
     }
 
-    const fullTrader = result.data.traders.find(t => t.id === trader.id);
+    const fullTrader = result.data.traders[0];
 
     if (!fullTrader) {
       content.innerHTML = "<p>Marchand introuvable.</p>";
@@ -904,9 +897,7 @@ async function displayTraderDetails(trader) {
     traderSearchValue = "";
     pendingTraderSearch = "";
 
-    allTraders = allTraders.map(t =>
-      t.id === fullTrader.id ? fullTrader : t
-    );
+    allTraders = allTraders.map(t => t.id === fullTrader.id ? fullTrader : t);
 
     displayTraderOffers(fullTrader);
 
@@ -934,14 +925,8 @@ function displayTraderOffers(trader) {
       barter.level === selectedTraderLevel
     )
     .filter(barter => {
-      const rewardMatch = barter.rewardItems?.some(reward =>
-        reward.item?.name?.toLowerCase().includes(search)
-      );
-
-      const requiredMatch = barter.requiredItems?.some(required =>
-        required.item?.name?.toLowerCase().includes(search)
-      );
-
+      const rewardMatch = barter.rewardItems?.some(r => r.item?.name?.toLowerCase().includes(search));
+      const requiredMatch = barter.requiredItems?.some(r => r.item?.name?.toLowerCase().includes(search));
       return rewardMatch || requiredMatch;
     });
 
@@ -951,38 +936,32 @@ function displayTraderOffers(trader) {
     </button>
 
     <div class="quest-detail">
-      <h2>${trader.name}</h2>
+      <h2>${escapeHTML(trader.name)}</h2>
 
       <div class="trader-search-box">
         <input
           type="text"
           class="trader-search"
           placeholder="Rechercher un objet marchand..."
-          value="${pendingTraderSearch}"
+          value="${escapeHTML(pendingTraderSearch)}"
           oninput='pendingTraderSearch = this.value'
         />
-
-        <button onclick='applyTraderSearch("${trader.id}")'>
+        <button onclick='applyTraderSearch("${escapeHTML(trader.id)}")'>
           🔍 Recherche
         </button>
       </div>
 
       <div class="trader-tabs">
-        <button onclick='setTraderViewMode("sales", "${trader.id}")'>
-          🛒 Ventes
-        </button>
-
-        <button onclick='setTraderViewMode("barters", "${trader.id}")'>
-          🔁 Échanges
-        </button>
+        <button onclick='setTraderViewMode("sales", "${escapeHTML(trader.id)}")'>🛒 Ventes</button>
+        <button onclick='setTraderViewMode("barters", "${escapeHTML(trader.id)}")'>🔁 Échanges</button>
       </div>
 
       <div class="trader-filters">
-        <button onclick='setTraderLevelFilter("all", "${trader.id}")'>Tous</button>
-        <button onclick='setTraderLevelFilter(1, "${trader.id}")'>LL1</button>
-        <button onclick='setTraderLevelFilter(2, "${trader.id}")'>LL2</button>
-        <button onclick='setTraderLevelFilter(3, "${trader.id}")'>LL3</button>
-        <button onclick='setTraderLevelFilter(4, "${trader.id}")'>LL4</button>
+        <button onclick='setTraderLevelFilter("all", "${escapeHTML(trader.id)}")'>Tous</button>
+        <button onclick='setTraderLevelFilter(1, "${escapeHTML(trader.id)}")'>LL1</button>
+        <button onclick='setTraderLevelFilter(2, "${escapeHTML(trader.id)}")'>LL2</button>
+        <button onclick='setTraderLevelFilter(3, "${escapeHTML(trader.id)}")'>LL3</button>
+        <button onclick='setTraderLevelFilter(4, "${escapeHTML(trader.id)}")'>LL4</button>
       </div>
 
       ${
@@ -990,21 +969,15 @@ function displayTraderOffers(trader) {
           ? `
             <div class="detail-box">
               <h3>Objets vendus</h3>
-
               ${
                 filteredOffers?.length > 0
                   ? filteredOffers.slice(0, 100).map(offer => `
                       <div class="reward">
-                        ${
-                          offer.item?.iconLink
-                            ? `<img src="${offer.item.iconLink}" alt="${offer.item.name}">`
-                            : ""
-                        }
-
+                        ${offer.item?.iconLink ? `<img src="${escapeHTML(offer.item.iconLink)}" alt="${escapeHTML(offer.item.name)}" loading="lazy">` : ""}
                         <span>
-                          ${offer.item?.name || "Objet inconnu"}
+                          ${escapeHTML(offer.item?.name) || "Objet inconnu"}
                           <br>
-                          ${offer.price || 0} ${offer.currency || ""}
+                          ${offer.price || 0} ${escapeHTML(offer.currency) || ""}
                           ${offer.minTraderLevel ? ` - LL${offer.minTraderLevel}` : ""}
                         </span>
                       </div>
@@ -1021,51 +994,32 @@ function displayTraderOffers(trader) {
           ? `
             <div class="detail-box">
               <h3>Échanges</h3>
-
               ${
                 filteredBarters?.length > 0
                   ? filteredBarters.slice(0, 100).map(barter => `
                       <div class="barter-card">
                         <div class="barter-reward">
                           <strong>Reçoit :</strong>
-
                           ${
                             barter.rewardItems?.map(reward => `
                               <div class="reward">
-                                ${
-                                  reward.item?.iconLink
-                                    ? `<img src="${reward.item.iconLink}" alt="${reward.item.name}">`
-                                    : ""
-                                }
-
-                                <span>
-                                  ${reward.count} x ${reward.item?.name || "Objet inconnu"}
-                                </span>
+                                ${reward.item?.iconLink ? `<img src="${escapeHTML(reward.item.iconLink)}" alt="${escapeHTML(reward.item.name)}" loading="lazy">` : ""}
+                                <span>${reward.count} x ${escapeHTML(reward.item?.name) || "Objet inconnu"}</span>
                               </div>
                             `).join("")
                           }
                         </div>
-
                         <div class="barter-required">
                           <strong>Donne :</strong>
-
                           ${
                             barter.requiredItems?.map(required => `
                               <div class="reward">
-                                ${
-                                  required.item?.iconLink
-                                    ? `<img src="${required.item.iconLink}" alt="${required.item.name}">`
-                                    : ""
-                                }
-
-                                <span>
-                                  ${required.count} x ${required.item?.name || "Objet inconnu"}
-                                </span>
+                                ${required.item?.iconLink ? `<img src="${escapeHTML(required.item.iconLink)}" alt="${escapeHTML(required.item.name)}" loading="lazy">` : ""}
+                                <span>${required.count} x ${escapeHTML(required.item?.name) || "Objet inconnu"}</span>
                               </div>
                             `).join("")
                           }
                         </div>
-
                         <p>LL${barter.level || "?"}</p>
                       </div>
                     `).join("")
@@ -1081,46 +1035,34 @@ function displayTraderOffers(trader) {
 
 function setTraderViewMode(mode, traderId) {
   traderViewMode = mode;
-
-  const trader = allTraders.find(trader => trader.id === traderId);
-
-  if (trader) {
-    displayTraderOffers(trader);
-  }
+  const trader = allTraders.find(t => t.id === traderId);
+  if (trader) displayTraderOffers(trader);
 }
 
 function setTraderLevelFilter(level, traderId) {
   selectedTraderLevel = level;
-
-  const trader = allTraders.find(trader => trader.id === traderId);
-
-  if (trader) {
-    displayTraderOffers(trader);
-  }
+  const trader = allTraders.find(t => t.id === traderId);
+  if (trader) displayTraderOffers(trader);
 }
 
 function applyTraderSearch(traderId) {
   traderSearchValue = pendingTraderSearch;
-
-  const trader = allTraders.find(trader => trader.id === traderId);
-
-  if (trader) {
-    displayTraderOffers(trader);
-  }
+  const trader = allTraders.find(t => t.id === traderId);
+  if (trader) displayTraderOffers(trader);
 }
 
 /* =========================
    RECHERCHE ET OUTILS
 ========================= */
 
-searchInput.addEventListener("input", () => {
+// Debounce appliqué : attend 250ms après la dernière frappe avant de filtrer
+const handleSearch = debounce(() => {
   const value = searchInput.value.toLowerCase();
 
   if (currentSection === "quests") {
     const filteredTasks = allTasks.filter(task =>
       task.name.toLowerCase().includes(value)
     );
-
     displayQuests(filteredTasks);
   }
 
@@ -1129,36 +1071,30 @@ searchInput.addEventListener("input", () => {
       item.name.toLowerCase().includes(value) ||
       item.shortName?.toLowerCase().includes(value)
     );
-
     displayItems(filteredItems);
   }
 
   if (currentSection === "ammo") {
-  const filteredAmmo = allAmmo.filter(ammo =>
-    ammo.item?.name?.toLowerCase().includes(value) ||
-    ammo.item?.shortName?.toLowerCase().includes(value) ||
-    ammo.caliber?.toLowerCase().includes(value)
-  );
+    const filteredAmmo = allAmmo.filter(ammo =>
+      ammo.item?.name?.toLowerCase().includes(value) ||
+      ammo.item?.shortName?.toLowerCase().includes(value) ||
+      ammo.caliber?.toLowerCase().includes(value)
+    );
+    displayAmmo(filteredAmmo);
+  }
+}, 250);
 
-  displayAmmo(filteredAmmo);
-}
-});
+searchInput.addEventListener("input", handleSearch);
 
 function getUnlockedTasks(taskId) {
   return allTasks.filter(otherTask =>
-    otherTask.taskRequirements?.some(req =>
-      req.task?.id === taskId
-    )
+    otherTask.taskRequirements?.some(req => req.task?.id === taskId)
   );
 }
 
 function toggleSection(id) {
   const section = document.getElementById(id);
-
-  section.style.display =
-    section.style.display === "none"
-      ? "block"
-      : "none";
+  section.style.display = section.style.display === "none" ? "block" : "none";
 }
 
 /* =========================
@@ -1171,10 +1107,7 @@ function addFavorite(type, data) {
   if (exists) {
     favorites = favorites.filter(fav => fav.id !== data.id);
   } else {
-    favorites.push({
-      type,
-      ...data
-    });
+    favorites.push({ type, ...data });
   }
 
   localStorage.setItem("favorites", JSON.stringify(favorites));
@@ -1192,13 +1125,8 @@ function showFavorites() {
   const cachedTasks = loadFromCache("cachedTasks");
   const cachedItems = loadFromCache("cachedItems");
 
-  if (cachedTasks) {
-    allTasks = cachedTasks;
-  }
-
-  if (cachedItems) {
-    allItems = cachedItems;
-  }
+  if (cachedTasks) allTasks = cachedTasks;
+  if (cachedItems) allItems = cachedItems;
 
   content.innerHTML = "<h2>Favoris</h2>";
 
@@ -1213,8 +1141,8 @@ function showFavorites() {
     card.onclick = () => openFavorite(fav);
 
     card.innerHTML = `
-      <h3>${fav.name}</h3>
-      <p>${fav.type}</p>
+      <h3>${escapeHTML(fav.name)}</h3>
+      <p>${escapeHTML(fav.type)}</p>
     `;
 
     content.appendChild(card);
@@ -1224,18 +1152,12 @@ function showFavorites() {
 function openFavorite(fav) {
   if (fav.type === "quête") {
     const task = allTasks.find(task => task.id === fav.id);
-
-    task
-      ? displayQuestDetails(task)
-      : alert("Charge d'abord les quêtes.");
+    task ? displayQuestDetails(task) : alert("Charge d'abord les quêtes.");
   }
 
   if (fav.type === "objet") {
     const item = allItems.find(item => item.id === fav.id);
-
-    item
-      ? displayItemDetails(item)
-      : alert("Charge d'abord les objets.");
+    item ? displayItemDetails(item) : alert("Charge d'abord les objets.");
   }
 }
 
@@ -1249,7 +1171,6 @@ function toggleTaskComplete(taskId) {
   } else {
     completedTasks.push(taskId);
   }
-
   localStorage.setItem("completedTasks", JSON.stringify(completedTasks));
 }
 
@@ -1259,18 +1180,14 @@ function isTaskComplete(taskId) {
 
 function getKappaProgress() {
   const kappaTasks = allTasks.filter(task => task.kappaRequired);
-
-  const completedKappaTasks = kappaTasks.filter(task =>
-    completedTasks.includes(task.id)
-  );
+  const completedKappaTasks = kappaTasks.filter(task => completedTasks.includes(task.id));
 
   return {
     completed: completedKappaTasks.length,
     total: kappaTasks.length,
-    percent:
-      kappaTasks.length > 0
-        ? Math.round((completedKappaTasks.length / kappaTasks.length) * 100)
-        : 0
+    percent: kappaTasks.length > 0
+      ? Math.round((completedKappaTasks.length / kappaTasks.length) * 100)
+      : 0
   };
 }
 
@@ -1295,10 +1212,9 @@ function showKappaTasks() {
     card.innerHTML = `
       <h3>
         ${completedTasks.includes(task.id) ? "✔ " : ""}
-        ${task.name}
+        ${escapeHTML(task.name)}
       </h3>
-
-      <p>${task.trader?.name || "Inconnu"}</p>
+      <p>${escapeHTML(task.trader?.name) || "Inconnu"}</p>
     `;
 
     content.appendChild(card);
@@ -1315,40 +1231,24 @@ function showHome() {
   searchInput.value = "";
 
   const cachedTasks = loadFromCache("cachedTasks");
+  if (cachedTasks) allTasks = cachedTasks;
 
-  if (cachedTasks) {
-    allTasks = cachedTasks;
-  }
+  // OPTIMISATION : getKappaProgress() appelé une seule fois, résultat stocké
+  const kappa = getKappaProgress();
 
   content.innerHTML = `
     <div class="home-screen">
       <div class="home-overlay">
         <h1>WikiTarkov</h1>
-
-        <p class="subtitle">
-          Companion App Escape From Tarkov
-        </p>
+        <p class="subtitle">Companion App Escape From Tarkov</p>
 
         <div class="kappa-progress" onclick="showKappaTasks()">
           <h3>🟣 Progression Kappa</h3>
-
-          <p>
-            ${getKappaProgress().completed}
-            /
-            ${getKappaProgress().total}
-            quêtes
-          </p>
-
+          <p>${kappa.completed} / ${kappa.total} quêtes</p>
           <div class="progress-bar">
-            <div
-              class="progress-fill"
-              style="width: ${getKappaProgress().percent}%;"
-            ></div>
+            <div class="progress-fill" style="width: ${kappa.percent}%;"></div>
           </div>
-
-          <span>
-            ${getKappaProgress().percent}%
-          </span>
+          <span>${kappa.percent}%</span>
         </div>
 
         <div class="home-buttons">
@@ -1365,19 +1265,9 @@ function showHome() {
 }
 
 /* =========================
-   SERVICE WORKER
+   AMMO
+   Cache ajouté (comme les quêtes et objets)
 ========================= */
-
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker
-    .register("service-worker.js")
-    .then(() => {
-      console.log("Service Worker enregistré");
-    })
-    .catch(error => {
-      console.log(error);
-    });
-}
 
 async function showAmmo() {
   currentSection = "ammo";
@@ -1386,28 +1276,34 @@ async function showAmmo() {
 
   content.innerHTML = "<p>Chargement des munitions...</p>";
 
-  const query = `
-{
-  ammo {
-    item {
-      id
-      name
-      shortName
-      iconLink
-    }
-    caliber
-    damage
-    penetrationPower
+  const cachedAmmo = loadFromCache("cachedAmmo");
+
+  if (cachedAmmo) {
+    allAmmo = cachedAmmo;
+    displayAmmo(allAmmo);
+    return;
   }
-}
-`;
+
+  const query = `
+    {
+      ammo {
+        item {
+          id
+          name
+          shortName
+          iconLink
+        }
+        caliber
+        damage
+        penetrationPower
+      }
+    }
+  `;
 
   try {
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query })
     });
 
@@ -1420,6 +1316,7 @@ async function showAmmo() {
     }
 
     allAmmo = result.data.ammo;
+    saveToCache("cachedAmmo", allAmmo);
     displayAmmo(allAmmo);
 
   } catch (error) {
@@ -1429,80 +1326,35 @@ async function showAmmo() {
 }
 
 function getArmorClassInfo(pen) {
-  if (pen >= 50) {
-    return {
-      label: "Très efficace classe 5/6",
-      className: "armor-red"
-    };
-  }
-
-  if (pen >= 40) {
-    return {
-      label: "Efficace classe 4/5",
-      className: "armor-orange"
-    };
-  }
-
-  if (pen >= 30) {
-    return {
-      label: "Correct classe 3/4",
-      className: "armor-yellow"
-    };
-  }
-
-  return {
-    label: "Faible pénétration",
-    className: "armor-green"
-  };
+  if (pen >= 50) return { label: "Très efficace classe 5/6", className: "armor-red" };
+  if (pen >= 40) return { label: "Efficace classe 4/5", className: "armor-orange" };
+  if (pen >= 30) return { label: "Correct classe 3/4", className: "armor-yellow" };
+  return { label: "Faible pénétration", className: "armor-green" };
 }
 
 function displayAmmo(ammoList) {
   content.innerHTML = "<h2>Ammo / Ballistics</h2>";
 
-  const calibers = [
-  ...new Set(
-    allAmmo.map(ammo => ammo.caliber).filter(Boolean)
-  )
-].sort();
+  const calibers = [...new Set(allAmmo.map(a => a.caliber).filter(Boolean))].sort();
 
   content.innerHTML += `
-
-  <div class="ammo-caliber-filter">
-
-    <select onchange="setAmmoCaliberFilter(this.value)">
-      <option value="all">Tous les calibres</option>
-
-      ${
-        calibers.map(caliber => `
-          <option
-            value="${caliber}"
-            ${
-              selectedAmmoCaliber === caliber
-                ? "selected"
-                : ""
-            }
-          >
-            ${caliber}
+    <div class="ammo-caliber-filter">
+      <select onchange="setAmmoCaliberFilter(this.value)">
+        <option value="all">Tous les calibres</option>
+        ${calibers.map(caliber => `
+          <option value="${escapeHTML(caliber)}" ${selectedAmmoCaliber === caliber ? "selected" : ""}>
+            ${escapeHTML(caliber)}
           </option>
-        `).join("")
-      }
+        `).join("")}
+      </select>
+    </div>
+    <div class="trader-filters"></div>
+  `;
 
-    </select>
-
-  </div>
-
-  <div class="trader-filters">
-`;
-      
   ammoList
-  .filter(ammo =>
-    ammo.penetrationPower >= selectedAmmoPen
-    )
-  .filter(ammo =>
-  selectedAmmoCaliber === "all" ||
-  ammo.caliber === selectedAmmoCaliber
-    )
-  .sort((a, b) => b.penetrationPower - a.penetrationPower)
+    .filter(ammo => ammo.penetrationPower >= selectedAmmoPen)
+    .filter(ammo => selectedAmmoCaliber === "all" || ammo.caliber === selectedAmmoCaliber)
+    .sort((a, b) => b.penetrationPower - a.penetrationPower)
     .forEach(ammo => {
       const armorInfo = getArmorClassInfo(ammo.penetrationPower || 0);
       const card = document.createElement("div");
@@ -1510,20 +1362,13 @@ function displayAmmo(ammoList) {
 
       card.innerHTML = `
         <div class="item-card">
-          ${ammo.item?.iconLink ? `<img src="${ammo.item.iconLink}" alt="${ammo.item.name}">` : ""}
-
+          ${ammo.item?.iconLink ? `<img src="${escapeHTML(ammo.item.iconLink)}" alt="${escapeHTML(ammo.item.name)}" loading="lazy">` : ""}
           <div>
-            <h3>${ammo.item?.name || "Munition inconnue"}</h3>
-            <p><strong>Calibre :</strong> ${ammo.caliber || "N/A"}</p>
+            <h3>${escapeHTML(ammo.item?.name) || "Munition inconnue"}</h3>
+            <p><strong>Calibre :</strong> ${escapeHTML(ammo.caliber) || "N/A"}</p>
             <p><strong>Dégâts :</strong> ${ammo.damage || 0}</p>
-            <p><strong>Pénétration :</strong> ${ammo.penetrationPower || 0} (${armorInfo.label})</p>
-
-            <p>
-              <strong>Classe armure :</strong>
-              <span class="${armorInfo.className}">
-                ${armorInfo.label}
-              </span>
-            </p>
+            <p><strong>Pénétration :</strong> ${ammo.penetrationPower || 0}</p>
+            <p><strong>Classe armure :</strong> <span class="${armorInfo.className}">${armorInfo.label}</span></p>
           </div>
         </div>
       `;
@@ -1538,10 +1383,19 @@ function setAmmoPenFilter(value) {
 }
 
 function setAmmoCaliberFilter(caliber) {
-
   selectedAmmoCaliber = caliber;
-
   displayAmmo(allAmmo);
+}
+
+/* =========================
+   SERVICE WORKER
+========================= */
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .register("service-worker.js")
+    .then(() => console.log("Service Worker enregistré"))
+    .catch(error => console.error("SW erreur :", error));
 }
 
 /* =========================

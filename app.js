@@ -1501,7 +1501,7 @@ function showKappaTasks() {
 }
 
 /* =========================
-   ACCUEIL
+   ACCUEIL — DASHBOARD
 ========================= */
 
 function showHome(push = true) {
@@ -1514,33 +1514,149 @@ function showHome(push = true) {
   const cachedTasks = loadFromCache("cachedTasks");
   if (cachedTasks) allTasks = cachedTasks;
 
-  // OPTIMISATION : getKappaProgress() appelé une seule fois, résultat stocké
+  const cachedItems = loadFromCache("cachedItems");
+  if (cachedItems) allItems = cachedItems;
+
+  const cachedHideout = allHideoutStations;
+
   const kappa = getKappaProgress();
 
+  // Quêtes en cours (non terminées, avec données disponibles)
+  const inProgressTasks = allTasks
+    .filter(t => !completedTasks.includes(t.id))
+    .slice(0, 3);
+
+  // Hideout — stations non complètes
+  const hideoutIncomplete = allHideoutStations.filter(station => {
+    const p = getHideoutStationProgress(station);
+    return p.percent < 100;
+  });
+
+  // Favoris récents
+  const recentFavorites = favorites.slice(-3).reverse();
+
   content.innerHTML = `
-    <div class="home-screen">
-      <div class="home-overlay">
-        <h1>WikiTarkov</h1>
-        <p class="subtitle">Companion App Escape From Tarkov</p>
+    <div class="dashboard">
 
-        <div class="kappa-progress" onclick="showKappaTasks()">
-          <h3>🟣 Progression Kappa</h3>
-          <p>${kappa.completed} / ${kappa.total} quêtes</p>
-          <div class="progress-bar">
-            <div class="progress-fill" style="width: ${kappa.percent}%;"></div>
-          </div>
-          <span>${kappa.percent}%</span>
-        </div>
-
-        <div class="home-buttons">
-          <button onclick="getQuests()">📋 Quêtes</button>
-          <button onclick="showItems()">🎒 Objets</button>
-          <button onclick="showMaps()">🗺 Maps</button>
-          <button onclick="showHideout()">🏚 Hideout</button>
-          <button onclick="showTraders()">💰 Marchands</button>
-          <button onclick="showFavorites()">⭐ Favoris</button>
+      <!-- HERO BANNER -->
+      <div class="dashboard-hero">
+        <div class="dashboard-hero-text">
+          <h1>WikiTarkov</h1>
+          <p>Companion App • Escape From Tarkov</p>
         </div>
       </div>
+
+      <!-- KAPPA -->
+      <div class="dashboard-card kappa-card" onclick="showKappaTasks()">
+        <div class="dashboard-card-header">
+          <span class="dashboard-card-icon">🟣</span>
+          <span class="dashboard-card-title">Progression Kappa</span>
+          <span class="dashboard-card-chevron">›</span>
+        </div>
+        <div class="progress-bar" style="margin: 10px 0 6px">
+          <div class="progress-fill" style="width: ${kappa.percent}%"></div>
+        </div>
+        <div class="kappa-stats-row">
+          <span>${kappa.completed} / ${kappa.total} quêtes</span>
+          <span class="kappa-pct">${kappa.percent}%</span>
+        </div>
+      </div>
+
+      <!-- QUÊTES EN COURS -->
+      <div class="dashboard-section">
+        <div class="dashboard-section-header">
+          <span>📋 Quêtes à faire</span>
+          <button class="dashboard-see-all" onclick="getQuests()">Voir tout →</button>
+        </div>
+        ${allTasks.length === 0 ? `
+          <div class="dashboard-empty" onclick="getQuests()">
+            <p>Charge les quêtes pour voir ta progression</p>
+          </div>
+        ` : inProgressTasks.length === 0 ? `
+          <div class="dashboard-empty">
+            <p>🎉 Toutes les quêtes sont terminées !</p>
+          </div>
+        ` : inProgressTasks.map(task => `
+          <div class="dashboard-task-card" onclick="getQuests()">
+            <div class="dashboard-task-info">
+              <span class="dashboard-task-name">${escapeHTML(task.name)}</span>
+              <span class="dashboard-task-meta">
+                ${escapeHTML(task.trader?.name || "?")}
+                ${task.map?.name ? `· ${escapeHTML(task.map.name)}` : ""}
+              </span>
+            </div>
+            ${task.kappaRequired ? '<span class="kappa-badge">🟣</span>' : ""}
+          </div>
+        `).join("")}
+      </div>
+
+      <!-- HIDEOUT -->
+      <div class="dashboard-section">
+        <div class="dashboard-section-header">
+          <span>🏚 Hideout</span>
+          <button class="dashboard-see-all" onclick="showHideout()">Voir tout →</button>
+        </div>
+        ${allHideoutStations.length === 0 ? `
+          <div class="dashboard-empty" onclick="showHideout()">
+            <p>Charge le hideout pour voir la progression</p>
+          </div>
+        ` : `
+          <div class="dashboard-hideout-grid">
+            ${hideoutIncomplete.slice(0, 4).map(station => {
+              const p = getHideoutStationProgress(station);
+              return `
+                <div class="dashboard-hideout-cell" onclick="showHideout()">
+                  <span class="dashboard-hideout-name">${escapeHTML(station.name)}</span>
+                  <div class="progress-bar mini-progress">
+                    <div class="progress-fill" style="width:${p.percent}%"></div>
+                  </div>
+                  <span class="dashboard-hideout-pct">${p.percent}%</span>
+                </div>
+              `;
+            }).join("")}
+          </div>
+          ${hideoutIncomplete.length > 4 ? `
+            <p class="dashboard-more" onclick="showHideout()">
+              + ${hideoutIncomplete.length - 4} stations à compléter
+            </p>
+          ` : hideoutIncomplete.length === 0 ? `
+            <p class="dashboard-empty-text">🎉 Hideout complet !</p>
+          ` : ""}
+        `}
+      </div>
+
+      <!-- FAVORIS -->
+      ${recentFavorites.length > 0 ? `
+        <div class="dashboard-section">
+          <div class="dashboard-section-header">
+            <span>⭐ Favoris récents</span>
+            <button class="dashboard-see-all" onclick="showFavorites()">Voir tout →</button>
+          </div>
+          ${recentFavorites.map(fav => `
+            <div class="dashboard-task-card" onclick="openFavorite(${JSON.stringify(fav).replace(/"/g, '&quot;')})">
+              <div class="dashboard-task-info">
+                <span class="dashboard-task-name">${escapeHTML(fav.name)}</span>
+                <span class="dashboard-task-meta">${escapeHTML(fav.type)}</span>
+              </div>
+              <span style="color:var(--accent)">⭐</span>
+            </div>
+          `).join("")}
+        </div>
+      ` : ""}
+
+      <!-- ACCÈS RAPIDE -->
+      <div class="dashboard-section">
+        <div class="dashboard-section-header">
+          <span>⚡ Accès rapide</span>
+        </div>
+        <div class="dashboard-quick-grid">
+          <button class="dashboard-quick-btn" onclick="showMaps()">🗺<span>Maps</span></button>
+          <button class="dashboard-quick-btn" onclick="showAmmo()">🔫<span>Ammo</span></button>
+          <button class="dashboard-quick-btn" onclick="showTraders()">💰<span>Marchands</span></button>
+          <button class="dashboard-quick-btn" onclick="showItems()">🎒<span>Objets</span></button>
+        </div>
+      </div>
+
     </div>
   `;
 }

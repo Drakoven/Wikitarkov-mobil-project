@@ -1203,6 +1203,101 @@ button:focus-visible {
   border-left-color: var(--success);
 }
 
+/* Mini barre de progression objectifs sur les cartes */
+.card-obj-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.card-obj-bar {
+  flex: 1;
+  height: 5px;
+  background: var(--surface-3);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.card-obj-label {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* =========================
+   OBJECTIFS COCHABLES
+========================= */
+
+.objectives-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.obj-progress-label {
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.obj-progress-bar {
+  height: 6px;
+  background: var(--surface-3);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.objective-checkable {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.2s ease, background 0.15s ease;
+}
+
+.objective-checkable:hover {
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+
+.obj-checkbox {
+  flex: 0 0 24px;
+  height: 24px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--success);
+  font-weight: 700;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  margin-top: 1px;
+}
+
+.objective-done .obj-checkbox {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+
+.obj-text {
+  flex: 1;
+  line-height: 1.5;
+}
+
+.objective-done .obj-text {
+  text-decoration: line-through;
+  color: var(--muted);
+  opacity: 0.7;
+}
+
 /* =========================
    PAGINATION OBJETS
 ========================= */

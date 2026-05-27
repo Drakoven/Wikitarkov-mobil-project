@@ -33,6 +33,7 @@ let questFilterMap = "all";
 
 let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
 let completedTasks = JSON.parse(localStorage.getItem("completedTasks")) || [];
+let completedObjectives = JSON.parse(localStorage.getItem("completedObjectives")) || {};
 let hideoutItemProgress = JSON.parse(localStorage.getItem("hideoutItemProgress")) || {};
 
 const mapsData = [
@@ -386,6 +387,8 @@ function displayQuests(tasks, push = true) {
     if (isTaskComplete(task.id)) card.classList.add("quest-complete");
     card.onclick = () => displayQuestDetails(task);
 
+    const objProgress = getQuestObjectiveProgress(task);
+
     card.innerHTML = `
       <h3>
         ${isTaskComplete(task.id) ? "✔ " : ""}
@@ -397,6 +400,14 @@ function displayQuests(tasks, push = true) {
         ${task.map?.name ? `· ${escapeHTML(task.map.name)}` : ""}
         ${task.minPlayerLevel ? `· Niv. ${task.minPlayerLevel}` : ""}
       </p>
+      ${objProgress && !isTaskComplete(task.id) ? `
+        <div class="card-obj-progress">
+          <div class="card-obj-bar">
+            <div class="progress-fill" style="width:${objProgress.pct}%"></div>
+          </div>
+          <span class="card-obj-label">${objProgress.done}/${objProgress.total}</span>
+        </div>
+      ` : ""}
     `;
 
     content.appendChild(card);
@@ -438,6 +449,7 @@ function displayQuestDetails(task, push = true) {
       </button>
 
       <button
+        id="complete-btn-${escapeHTML(task.id)}"
         class="complete-btn"
         onclick='toggleTaskComplete("${escapeHTML(task.id)}")'
       >
@@ -452,15 +464,49 @@ function displayQuestDetails(task, push = true) {
       </div>
 
       <div class="detail-box">
-        <button class="section-toggle" onclick="toggleSection('objectives-section')">
-          ▼ Objectifs
-        </button>
+        <div class="objectives-header">
+          <button class="section-toggle" onclick="toggleSection('objectives-section')" style="flex:1">
+            ▼ Objectifs
+          </button>
+          ${task.objectives?.length > 0 ? `
+            <span class="obj-progress-label">
+              <span id="obj-label-${escapeHTML(task.id)}">
+                ${task.objectives.filter((_, i) => isObjectiveComplete(task.id, i)).length}
+                / ${task.objectives.length}
+              </span>
+            </span>
+          ` : ""}
+        </div>
+
+        ${task.objectives?.length > 0 ? `
+          <div class="obj-progress-bar">
+            <div
+              class="progress-fill"
+              id="obj-progress-${escapeHTML(task.id)}"
+              style="width: ${Math.round(
+                (task.objectives.filter((_, i) => isObjectiveComplete(task.id, i)).length
+                / task.objectives.length) * 100
+              )}%"
+            ></div>
+          </div>
+        ` : ""}
+
         <div id="objectives-section">
           ${
             task.objectives?.length > 0
-              ? task.objectives.map(obj => `
-                  <div class="objective">${escapeHTML(obj.description)}</div>
-                `).join("")
+              ? task.objectives.map((obj, i) => {
+                  const done = isObjectiveComplete(task.id, i);
+                  return `
+                    <div
+                      class="objective objective-checkable ${done ? "objective-done" : ""}"
+                      id="obj-${escapeHTML(task.id)}-${i}"
+                      onclick="toggleObjective('${escapeHTML(task.id)}', ${i})"
+                    >
+                      <span class="obj-checkbox">${done ? "✔" : ""}</span>
+                      <span class="obj-text">${escapeHTML(obj.description)}</span>
+                    </div>
+                  `;
+                }).join("")
               : "<p>Aucun objectif trouvé.</p>"
           }
         </div>
@@ -1455,6 +1501,80 @@ function toggleTaskComplete(taskId) {
 
 function isTaskComplete(taskId) {
   return completedTasks.includes(taskId);
+}
+
+/* =========================
+   OBJECTIFS INDIVIDUELS
+========================= */
+
+function getObjectiveKey(taskId, objIndex) {
+  return `${taskId}__obj${objIndex}`;
+}
+
+function isObjectiveComplete(taskId, objIndex) {
+  return !!completedObjectives[getObjectiveKey(taskId, objIndex)];
+}
+
+function toggleObjective(taskId, objIndex) {
+  const key = getObjectiveKey(taskId, objIndex);
+  completedObjectives[key] = !completedObjectives[key];
+  localStorage.setItem("completedObjectives", JSON.stringify(completedObjectives));
+
+  // Auto-complétion : si tous les objectifs sont cochés → quête terminée
+  const task = allTasks.find(t => t.id === taskId);
+  if (task?.objectives?.length > 0) {
+    const allDone = task.objectives.every((_, i) => isObjectiveComplete(taskId, i));
+    if (allDone && !completedTasks.includes(taskId)) {
+      completedTasks.push(taskId);
+      localStorage.setItem("completedTasks", JSON.stringify(completedTasks));
+    } else if (!allDone && completedTasks.includes(taskId)) {
+      completedTasks = completedTasks.filter(id => id !== taskId);
+      localStorage.setItem("completedTasks", JSON.stringify(completedTasks));
+    }
+  }
+
+  // Mise à jour ciblée — on ne reconstruit pas toute la page
+  updateObjectiveUI(taskId, objIndex);
+  updateQuestCompletionUI(taskId);
+}
+
+function updateObjectiveUI(taskId, objIndex) {
+  const key = getObjectiveKey(taskId, objIndex);
+  const done = !!completedObjectives[key];
+  const el = document.getElementById(`obj-${taskId}-${objIndex}`);
+  if (!el) return;
+
+  el.classList.toggle("objective-done", done);
+  const checkbox = el.querySelector(".obj-checkbox");
+  if (checkbox) checkbox.textContent = done ? "✔" : "";
+
+  // Met à jour la barre de progression des objectifs
+  const task = allTasks.find(t => t.id === taskId);
+  if (task?.objectives?.length > 0) {
+    const doneCount = task.objectives.filter((_, i) => isObjectiveComplete(taskId, i)).length;
+    const total = task.objectives.length;
+    const pct = Math.round((doneCount / total) * 100);
+
+    const bar = document.getElementById(`obj-progress-${taskId}`);
+    if (bar) bar.style.width = `${pct}%`;
+
+    const label = document.getElementById(`obj-label-${taskId}`);
+    if (label) label.textContent = `${doneCount} / ${total}`;
+  }
+}
+
+function updateQuestCompletionUI(taskId) {
+  const btn = document.getElementById(`complete-btn-${taskId}`);
+  if (!btn) return;
+  const done = completedTasks.includes(taskId);
+  btn.textContent = done ? "✔ Quête terminée" : "❌ Marquer comme terminée";
+  btn.style.background = done ? "var(--success)" : "";
+}
+
+function getQuestObjectiveProgress(task) {
+  if (!task.objectives?.length) return null;
+  const done = task.objectives.filter((_, i) => isObjectiveComplete(task.id, i)).length;
+  return { done, total: task.objectives.length, pct: Math.round((done / task.objectives.length) * 100) };
 }
 
 function getKappaProgress() {

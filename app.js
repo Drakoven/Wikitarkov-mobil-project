@@ -49,7 +49,7 @@ const mapsData = [
   {
     name: "Factory",
     image: "assets/maps/facto.jpg",
-    difficulty: "Difficile",
+    difficulty: "Hard",
     boss: "Tagilla",
     use: "Small PvP map, fast and dangerous.",
     extracts: ["Gate 3", "Cellars", "Med Tent Gate"],
@@ -58,7 +58,7 @@ const mapsData = [
   {
     name: "Woods",
     image: "assets/maps/woods.jpg",
-    difficulty: "Intermédiaire",
+    difficulty: "Intermediate",
     boss: "Shturman",
     use: "Large open map, great for quests and sniping.",
     extracts: ["Outskirts", "UN Roadblock", "ZB-014", "RUAF Gate"],
@@ -67,7 +67,7 @@ const mapsData = [
   {
     name: "Interchange",
     image: "assets/maps/interchange.jpg",
-    difficulty: "Intermédiaire",
+    difficulty: "Intermediate",
     boss: "Killa",
     use: "Great technical and electronic loot.",
     extracts: ["Emercom Checkpoint", "Railway Exfil", "Power Station"],
@@ -76,7 +76,7 @@ const mapsData = [
   {
     name: "Reserve",
     image: "assets/maps/reserve.jpg",
-    difficulty: "Difficile",
+    difficulty: "Hard",
     boss: "Glukhar",
     use: "Excellent military loot and raiders.",
     extracts: ["D-2", "Hermetic Door", "Cliff Descent", "Armored Train"],
@@ -85,7 +85,7 @@ const mapsData = [
   {
     name: "Shoreline",
     image: "assets/maps/shoreline.jpg",
-    difficulty: "Intermédiaire",
+    difficulty: "Intermediate",
     boss: "Sanitar",
     use: "Large quest-oriented map with resort area.",
     extracts: ["Tunnel", "Road to Customs", "Pier Boat", "Path to Lighthouse"],
@@ -94,7 +94,7 @@ const mapsData = [
   {
     name: "Lighthouse",
     image: "assets/maps/lighthouse.jpg",
-    difficulty: "Difficile",
+    difficulty: "Hard",
     boss: "Zryachiy / Rogues",
     use: "Excellent loot with Rogue presence.",
     extracts: ["Southern Road", "Path to Shoreline", "Mountain Pass"],
@@ -103,7 +103,7 @@ const mapsData = [
   {
     name: "Labs",
     image: "assets/maps/labs.jpg",
-    difficulty: "Très difficile",
+    difficulty: "Very Hard",
     boss: "Raiders",
     use: "Intense PvP and high-tier loot.",
     extracts: ["Cargo Elevator", "Medical Elevator", "Parking Gate"],
@@ -112,7 +112,7 @@ const mapsData = [
   {
     name: "Streets",
     image: "assets/maps/streets.jpg",
-    difficulty: "Très difficile",
+    difficulty: "Very Hard",
     boss: "Kaban / Kollontay",
     use: "Very dense map with enormous loot potential.",
     extracts: ["Collapsed Crane", "Courtyard", "Damaged House", "Klimov Street"],
@@ -121,7 +121,7 @@ const mapsData = [
   {
     name: "Ground Zero",
     image: "assets/maps/groundzero.jpg",
-    difficulty: "Débutant",
+    difficulty: "Beginner",
     boss: "None",
     use: "Introduction map for new players.",
     extracts: ["Emercom Checkpoint", "Police Checkpoint", "Nakatani Basement"],
@@ -1753,7 +1753,7 @@ function showHome(push = true) {
       <!-- HERO BANNER -->
       <div class="dashboard-hero">
         <div class="dashboard-hero-text">
-          <h1>WikiTarkov</h1>
+          <h1>Raid Companion</h1>
           <p>Companion App • Escape From Tarkov</p>
         </div>
       </div>
@@ -1782,11 +1782,11 @@ function showHome(push = true) {
         </div>
         ${allTasks.length === 0 ? `
           <div class="dashboard-empty" onclick="getQuests()">
-            <p>Charge les quests pour voir ta progression</p>
+            <p>Load quests to see your progress</p>
           </div>
         ` : inProgressTasks.length === 0 ? `
           <div class="dashboard-empty">
-            <p>🎉 All les quests sont terminées !</p>
+            <p>🎉 All quests completed!</p>
           </div>
         ` : inProgressTasks.map(task => `
           <div class="dashboard-task-card" onclick="getQuests()">
@@ -2020,7 +2020,7 @@ function displayAmmo(ammoList, push = true) {
         <button
           class="ammo-compare-btn ${isSelected ? "ammo-compare-btn--active" : ""}"
           onclick="event.stopPropagation(); toggleAmmoComparison('${escapeHTML(ammo.item?.id)}'); displayAmmo(allAmmo, false)"
-          title="${isSelected ? "Retirer de la comparaison" : "Ajouter à la comparaison"}"
+          title="${isSelected ? "Remove from comparison" : "Add to comparison"}"
         >
           ${isSelected ? "✔" : "⚖"}
         </button>

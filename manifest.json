@@ -1,6 +1,6 @@
 {
-  "name": "WikiTarkov",
-  "short_name": "WikiTarkov",
+  "name": "Raid Companion",
+  "short_name": "RaidComp",
   "description": "Companion app for Escape from Tarkov — quests, hideout, traders, maps and ammo.",
   "start_url": ".",
   "display": "standalone",

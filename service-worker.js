@@ -1,4 +1,4 @@
-const CACHE_NAME = "wikitarkov-cache-v3";
+const CACHE_NAME = "raid-companion-cache-v1";
 
 // Assets statiques : mis en cache à l'installation
 const STATIC_ASSETS = [
@@ -110,7 +110,7 @@ async function networkFirst(request) {
   } catch {
     // Offline : on sert le cache
     const cached = await cache.match(request);
-    return cached || new Response("Hors ligne — ressource non disponible.", {
+    return cached || new Response("Offline — resource unavailable.", {
       status: 503,
       headers: { "Content-Type": "text/plain" }
     });

@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Companion app Escape from Tarkov — quêtes, hideout, marchands, maps et munitions.">
+  <meta name="description" content="Companion app for Escape from Tarkov — quêtes, hideout, marchands, maps et munitions.">
   <meta name="theme-color" content="#d6b56d">
 
-  <title>Raid Companion</title>
+  <title>WikiTarkov Mobile</title>
 
   <!-- Préconnexion à l'API pour réduire la latence du premier appel -->
   <link rel="preconnect" href="https://api.tarkov.dev">
@@ -18,30 +18,30 @@
 <body>
 
   <header>
-    <h1>Raid Companion</h1>
-    <p>Companion app Escape from Tarkov</p>
+    <h1>WikiTarkov</h1>
+    <p>Companion app for Escape from Tarkov</p>
   </header>
 
   <main>
     <input
       type="search"
       id="searchInput"
-      placeholder="Rechercher une quête, objet..."
-      aria-label="Rechercher"
+      placeholder="Search quests, items..."
+      aria-label="Search"
     />
 
     <section id="content" aria-live="polite"></section>
   </main>
 
-  <nav class="bottom-nav" aria-label="Navigation principale">
-    <button onclick="showHome()">Accueil</button>
-    <button onclick="getQuests()">Quêtes</button>
-    <button onclick="showItems()">Objets</button>
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <button onclick="showHome()">Home</button>
+    <button onclick="getQuests()">Quests</button>
+    <button onclick="showItems()">Items</button>
     <button onclick="showMaps()">Maps</button>
     <button onclick="showHideout()">Hideout</button>
-    <button onclick="showTraders()">Marchands</button>
+    <button onclick="showTraders()">Traders</button>
     <button onclick="showAmmo()">Ammo</button>
-    <button onclick="showFavorites()">Favoris</button>
+    <button onclick="showFavorites()">Favorites</button>
   </nav>
 
   <script src="app.js"></script>

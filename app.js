@@ -22,12 +22,12 @@ let selectedAmmoCaliber = "all";
 // Comparaison munitions — max 3 sélectionnées
 let ammoComparison = [];
 
-// Pagination objets
+// Pagination items
 let itemsPage = 0;
 const ITEMS_PER_PAGE = 40;
 let currentFilteredItems = [];
 
-// Filtres quêtes
+// Filtres quests
 let questFilterTrader = "all";
 let questFilterMap = "all";
 
@@ -40,9 +40,9 @@ const mapsData = [
   {
     name: "Customs",
     image: "assets/maps/customs.jpg",
-    difficulty: "Débutant / Intermédiaire",
+    difficulty: "Beginner / Intermediate",
     boss: "Reshala",
-    use: "Très utilisée pour les quêtes early wipe.",
+    use: "Very popular for early quests.",
     extracts: ["Crossroads", "ZB-1011", "Trailer Park", "RUAF Roadblock"],
     mapgenie: "https://mapgenie.io/tarkov/maps/customs"
   },
@@ -51,7 +51,7 @@ const mapsData = [
     image: "assets/maps/facto.jpg",
     difficulty: "Difficile",
     boss: "Tagilla",
-    use: "Petite map PvP, rapide et dangereuse.",
+    use: "Small PvP map, fast and dangerous.",
     extracts: ["Gate 3", "Cellars", "Med Tent Gate"],
     mapgenie: "https://mapgenie.io/tarkov/maps/factory"
   },
@@ -60,7 +60,7 @@ const mapsData = [
     image: "assets/maps/woods.jpg",
     difficulty: "Intermédiaire",
     boss: "Shturman",
-    use: "Grande map ouverte, utile pour quêtes et sniping.",
+    use: "Large open map, great for quests and sniping.",
     extracts: ["Outskirts", "UN Roadblock", "ZB-014", "RUAF Gate"],
     mapgenie: "https://mapgenie.io/tarkov/maps/woods"
   },
@@ -69,7 +69,7 @@ const mapsData = [
     image: "assets/maps/interchange.jpg",
     difficulty: "Intermédiaire",
     boss: "Killa",
-    use: "Bon loot technique et électronique.",
+    use: "Great technical and electronic loot.",
     extracts: ["Emercom Checkpoint", "Railway Exfil", "Power Station"],
     mapgenie: "https://mapgenie.io/tarkov/maps/interchange"
   },
@@ -78,7 +78,7 @@ const mapsData = [
     image: "assets/maps/reserve.jpg",
     difficulty: "Difficile",
     boss: "Glukhar",
-    use: "Très bon loot militaire et raiders.",
+    use: "Excellent military loot and raiders.",
     extracts: ["D-2", "Hermetic Door", "Cliff Descent", "Armored Train"],
     mapgenie: "https://mapgenie.io/tarkov/maps/reserve"
   },
@@ -87,7 +87,7 @@ const mapsData = [
     image: "assets/maps/shoreline.jpg",
     difficulty: "Intermédiaire",
     boss: "Sanitar",
-    use: "Grande map orientée quêtes et resort.",
+    use: "Large quest-oriented map with resort area.",
     extracts: ["Tunnel", "Road to Customs", "Pier Boat", "Path to Lighthouse"],
     mapgenie: "https://mapgenie.io/tarkov/maps/shoreline"
   },
@@ -96,7 +96,7 @@ const mapsData = [
     image: "assets/maps/lighthouse.jpg",
     difficulty: "Difficile",
     boss: "Zryachiy / Rogues",
-    use: "Très bon loot et présence des Rogues.",
+    use: "Excellent loot with Rogue presence.",
     extracts: ["Southern Road", "Path to Shoreline", "Mountain Pass"],
     mapgenie: "https://mapgenie.io/tarkov/maps/lighthouse"
   },
@@ -105,7 +105,7 @@ const mapsData = [
     image: "assets/maps/labs.jpg",
     difficulty: "Très difficile",
     boss: "Raiders",
-    use: "PvP intense et loot haut niveau.",
+    use: "Intense PvP and high-tier loot.",
     extracts: ["Cargo Elevator", "Medical Elevator", "Parking Gate"],
     mapgenie: "https://mapgenie.io/tarkov/maps/the-lab"
   },
@@ -114,7 +114,7 @@ const mapsData = [
     image: "assets/maps/streets.jpg",
     difficulty: "Très difficile",
     boss: "Kaban / Kollontay",
-    use: "Très dense avec énormément de loot.",
+    use: "Very dense map with enormous loot potential.",
     extracts: ["Collapsed Crane", "Courtyard", "Damaged House", "Klimov Street"],
     mapgenie: "https://mapgenie.io/tarkov/maps/streets-of-tarkov"
   },
@@ -122,8 +122,8 @@ const mapsData = [
     name: "Ground Zero",
     image: "assets/maps/groundzero.jpg",
     difficulty: "Débutant",
-    boss: "Aucun",
-    use: "Map d'introduction pour nouveaux joueurs.",
+    boss: "None",
+    use: "Introduction map for new players.",
     extracts: ["Emercom Checkpoint", "Police Checkpoint", "Nakatani Basement"],
     mapgenie: "https://mapgenie.io/tarkov/maps/ground-zero"
   }
@@ -272,7 +272,7 @@ async function getQuests(push = true) {
   setActiveNav("quests");
   searchInput.style.display = "block";
   searchInput.value = "";
-  content.innerHTML = "<p>Chargement des quêtes...</p>";
+  content.innerHTML = "<p>Loading quests...</p>";
 
   const cachedTasks = loadFromCache("cachedTasks");
 
@@ -323,7 +323,7 @@ async function getQuests(push = true) {
 
     if (result.errors) {
       console.error(result.errors);
-      content.innerHTML = "<p>Erreur API quêtes.</p>";
+      content.innerHTML = "<p>Quest API error.</p>";
       return;
     }
 
@@ -333,7 +333,7 @@ async function getQuests(push = true) {
 
   } catch (error) {
     console.error(error);
-    content.innerHTML = "<p>Impossible de charger les quêtes.</p>";
+    content.innerHTML = "<p>Unable to load quests.</p>";
   }
 }
 
@@ -353,15 +353,15 @@ function displayQuests(tasks, push = true) {
   });
 
   content.innerHTML = `
-    <h2>Quêtes <span style="font-size:14px; color:var(--muted)">(${filtered.length})</span></h2>
+    <h2>Quests <span style="font-size:14px; color:var(--muted)">(${filtered.length})</span></h2>
 
     <div class="quest-filters">
       <div class="quest-filter-row">
-        <label>Marchand</label>
+        <label>Trader</label>
         <select onchange="setQuestFilter('trader', this.value)">
           ${traders.map(t => `
             <option value="${escapeHTML(t)}" ${questFilterTrader === t ? "selected" : ""}>
-              ${t === "all" ? "Tous" : escapeHTML(t)}
+              ${t === "all" ? "All" : escapeHTML(t)}
             </option>
           `).join("")}
         </select>
@@ -372,7 +372,7 @@ function displayQuests(tasks, push = true) {
         <select onchange="setQuestFilter('map', this.value)">
           ${maps.map(m => `
             <option value="${escapeHTML(m)}" ${questFilterMap === m ? "selected" : ""}>
-              ${m === "all" ? "Toutes" : escapeHTML(m)}
+              ${m === "all" ? "All" : escapeHTML(m)}
             </option>
           `).join("")}
         </select>
@@ -380,14 +380,14 @@ function displayQuests(tasks, push = true) {
 
       ${questFilterTrader !== "all" || questFilterMap !== "all" ? `
         <button class="reset-filter-btn" onclick="resetQuestFilters()">
-          ✕ Réinitialiser les filtres
+          ✕ Reset filters
         </button>
       ` : ""}
     </div>
   `;
 
   if (filtered.length === 0) {
-    content.innerHTML += "<p>Aucune quête pour ces filtres.</p>";
+    content.innerHTML += "<p>No quests found for these filters.</p>";
     return;
   }
 
@@ -406,9 +406,9 @@ function displayQuests(tasks, push = true) {
         ${task.kappaRequired ? '<span class="kappa-badge">🟣 Kappa</span>' : ""}
       </h3>
       <p>
-        ${escapeHTML(task.trader?.name) || "Inconnu"}
+        ${escapeHTML(task.trader?.name) || "Unknown"}
         ${task.map?.name ? `· ${escapeHTML(task.map.name)}` : ""}
-        ${task.minPlayerLevel ? `· Niv. ${task.minPlayerLevel}` : ""}
+        ${task.minPlayerLevel ? `· Lvl. ${task.minPlayerLevel}` : ""}
       </p>
       ${objProgress && !isTaskComplete(task.id) ? `
         <div class="card-obj-progress">
@@ -443,7 +443,7 @@ function displayQuestDetails(task, push = true) {
 
   content.innerHTML = `
     <button class="back-btn" onclick="displayQuests(allTasks)">
-      ← Retour
+      ← Back
     </button>
 
     <div class="quest-detail">
@@ -453,9 +453,9 @@ function displayQuestDetails(task, push = true) {
 
       <button
         class="favorite-btn"
-        onclick='addFavorite("quête", { id: "${escapeHTML(task.id)}", name: "${escapeHTML(task.name)}" })'
+        onclick='addFavorite("quest", { id: "${escapeHTML(task.id)}", name: "${escapeHTML(task.name)}" })'
       >
-        ${isFavorite(task.id) ? "⭐ Retirer des favoris" : "☆ Ajouter aux favoris"}
+        ${isFavorite(task.id) ? "⭐ Remove from favorites" : "☆ Add to favorites"}
       </button>
 
       <button
@@ -463,20 +463,20 @@ function displayQuestDetails(task, push = true) {
         class="complete-btn"
         onclick='toggleTaskComplete("${escapeHTML(task.id)}")'
       >
-        ${isTaskComplete(task.id) ? "✔ Quête terminée" : "❌ Marquer comme terminée"}
+        ${isTaskComplete(task.id) ? "✔ Quest completed" : "❌ Mark as completed"}
       </button>
 
       <div class="detail-box">
-        <p><strong>Marchand :</strong> ${escapeHTML(task.trader?.name) || "Inconnu"}</p>
-        <p><strong>Map :</strong> ${escapeHTML(task.map?.name) || "Non précisée"}</p>
-        <p><strong>Niveau requis :</strong> ${escapeHTML(task.minPlayerLevel) || "Aucun"}</p>
-        <p><strong>XP :</strong> ${task.experience || 0}</p>
+        <p><strong>Trader:</strong> ${escapeHTML(task.trader?.name) || "Unknown"}</p>
+        <p><strong>Map:</strong> ${escapeHTML(task.map?.name) || "Not specified"}</p>
+        <p><strong>Required level:</strong> ${escapeHTML(task.minPlayerLevel) || "None"}</p>
+        <p><strong>XP:</strong> ${task.experience || 0}</p>
       </div>
 
       <div class="detail-box">
         <div class="objectives-header">
           <button class="section-toggle" onclick="toggleSection('objectives-section')" style="flex:1">
-            ▼ Objectifs
+            ▼ Objectives
           </button>
           ${task.objectives?.length > 0 ? `
             <span class="obj-progress-label">
@@ -517,14 +517,14 @@ function displayQuestDetails(task, push = true) {
                     </div>
                   `;
                 }).join("")
-              : "<p>Aucun objectif trouvé.</p>"
+              : "<p>No objectives found.</p>"
           }
         </div>
       </div>
 
       <div class="detail-box">
         <button class="section-toggle" onclick="toggleSection('rewards-section')">
-          ▼ Récompenses
+          ▼ Rewards
         </button>
         <div id="rewards-section">
           ${
@@ -535,29 +535,29 @@ function displayQuestDetails(task, push = true) {
                     <span>${reward.count} x ${escapeHTML(reward.item.name)}</span>
                   </div>
                 `).join("")
-              : "<p>Aucune récompense trouvée.</p>"
+              : "<p>No rewards found.</p>"
           }
         </div>
       </div>
 
       <div class="detail-box">
         <button class="section-toggle" onclick="toggleSection('requirements-section')">
-          ▼ Quêtes précédentes
+          ▼ Prerequiredite Quests
         </button>
         <div id="requirements-section">
           ${
             task.taskRequirements?.length > 0
               ? task.taskRequirements.map(req => `
-                  <div class="objective">${escapeHTML(req.task?.name) || "Quête inconnue"}</div>
+                  <div class="objective">${escapeHTML(req.task?.name) || "Unknown quest"}</div>
                 `).join("")
-              : "<p>Aucune quête précédente requise.</p>"
+              : "<p>No prerequiredite quests required.</p>"
           }
         </div>
       </div>
 
       <div class="detail-box">
         <button class="section-toggle" onclick="toggleSection('unlocked-section')">
-          ▼ Quêtes débloquées
+          ▼ Unlocked Quests
         </button>
         <div id="unlocked-section">
           ${
@@ -568,7 +568,7 @@ function displayQuestDetails(task, push = true) {
                     ${unlocked.kappaRequired ? '<span class="kappa-badge">🟣 Kappa</span>' : ""}
                   </div>
                 `).join("")
-              : "<p>Aucune quête débloquée trouvée.</p>"
+              : "<p>No unlocked quests found.</p>"
           }
         </div>
       </div>
@@ -586,7 +586,7 @@ async function showItems(push = true) {
   setActiveNav("items");
   searchInput.style.display = "block";
   searchInput.value = "";
-  content.innerHTML = "<p>Chargement des objets...</p>";
+  content.innerHTML = "<p>Loading items...</p>";
 
   const cachedItems = loadFromCache("cachedItems");
 
@@ -625,7 +625,7 @@ async function showItems(push = true) {
 
     if (result.errors) {
       console.error(result.errors);
-      content.innerHTML = "<p>Erreur API objets.</p>";
+      content.innerHTML = "<p>Items API error.</p>";
       return;
     }
 
@@ -635,7 +635,7 @@ async function showItems(push = true) {
 
   } catch (error) {
     console.error(error);
-    content.innerHTML = "<p>Erreur chargement objets.</p>";
+    content.innerHTML = "<p>Error loading items.</p>";
   }
 }
 
@@ -643,12 +643,12 @@ function displayItems(items, push = true) {
   if (push) pushHistory("items");
   setActiveNav("items");
 
-  // On garde la liste filtrée en mémoire pour le "Charger plus"
+  // On garde la liste filtrée en mémoire pour le "Load more"
   currentFilteredItems = items;
   itemsPage = 0;
 
   content.innerHTML = `
-    <h2>Objets <span id="items-count" style="font-size:14px; color:var(--muted)"></span></h2>
+    <h2>Items <span id="items-count" style="font-size:14px; color:var(--muted)"></span></h2>
     <div id="items-list"></div>
     <div id="items-load-more"></div>
   `;
@@ -681,8 +681,8 @@ function renderItemsPage() {
         <img src="${escapeHTML(item.iconLink)}" alt="${escapeHTML(item.name)}" loading="lazy">
         <div>
           <h3>${escapeHTML(item.name)}</h3>
-          <p>${escapeHTML(item.category?.name) || "Inconnu"}</p>
-          <p>${item.avg24hPrice ? item.avg24hPrice.toLocaleString("fr-FR") + " ₽" : "Non disponible"}</p>
+          <p>${escapeHTML(item.category?.name) || "Unknown"}</p>
+          <p>${item.avg24hPrice ? item.avg24hPrice.toLocaleString("fr-FR") + " ₽" : "Unavailable"}</p>
         </div>
       </div>
     `;
@@ -690,20 +690,20 @@ function renderItemsPage() {
     list.appendChild(card);
   });
 
-  // Bouton "Charger plus"
+  // Bouton "Load more"
   const loadMore = document.getElementById("items-load-more");
   if (!loadMore) return;
 
   if (end < total) {
     loadMore.innerHTML = `
       <button class="load-more-btn" onclick="loadMoreItems()">
-        Charger plus (${total - end} restants)
+        Load more (${total - end} remaining)
       </button>
     `;
   } else {
     loadMore.innerHTML = `
       <p style="text-align:center; color:var(--muted); padding: 16px 0;">
-        Tous les objets affichés (${total})
+        All items displayed (${total})
       </p>
     `;
   }
@@ -725,7 +725,7 @@ function displayItemDetails(item, push = true) {
   setActiveNav("items");
   content.innerHTML = `
     <button class="back-btn" onclick="displayItems(allItems)">
-      ← Retour
+      ← Back
     </button>
 
     <div class="quest-detail">
@@ -733,29 +733,29 @@ function displayItemDetails(item, push = true) {
 
       <button
         class="favorite-btn"
-        onclick='addFavorite("objet", { id: "${escapeHTML(item.id)}", name: "${escapeHTML(item.name)}" })'
+        onclick='addFavorite("item", { id: "${escapeHTML(item.id)}", name: "${escapeHTML(item.name)}" })'
       >
-        ${isFavorite(item.id) ? "⭐ Retirer des favoris" : "☆ Ajouter aux favoris"}
+        ${isFavorite(item.id) ? "⭐ Remove from favorites" : "☆ Add to favorites"}
       </button>
 
       <div class="detail-box item-detail-header">
         <img src="${escapeHTML(item.imageLink || item.iconLink)}" alt="${escapeHTML(item.name)}" loading="lazy">
         <div>
-          <p><strong>Nom court :</strong> ${escapeHTML(item.shortName) || "N/A"}</p>
-          <p><strong>Catégorie :</strong> ${escapeHTML(item.category?.name) || "Inconnu"}</p>
-          <p><strong>Prix moyen :</strong> ${item.avg24hPrice || 0}₽</p>
+          <p><strong>Short name:</strong> ${escapeHTML(item.shortName) || "N/A"}</p>
+          <p><strong>Category:</strong> ${escapeHTML(item.category?.name) || "Unknown"}</p>
+          <p><strong>Average price:</strong> ${item.avg24hPrice || 0}₽</p>
         </div>
       </div>
 
       <div class="detail-box">
-        <h3>Informations</h3>
-        <p><strong>Poids :</strong> ${item.weight || 0} kg</p>
-        <p><strong>Taille :</strong> ${item.width || "?"} x ${item.height || "?"}</p>
+        <h3>Information</h3>
+        <p><strong>Weight:</strong> ${item.weight || 0} kg</p>
+        <p><strong>Size:</strong> ${item.width || "?"} x ${item.height || "?"}</p>
       </div>
 
       <div class="detail-box">
         <h3>Description</h3>
-        <p>${escapeHTML(item.description) || "Aucune description"}</p>
+        <p>${escapeHTML(item.description) || "No description"}</p>
       </div>
     </div>
   `;
@@ -784,8 +784,8 @@ function showMaps(push = true) {
         <img src="${escapeHTML(map.image)}" alt="${escapeHTML(map.name)}" loading="lazy">
       </div>
       <h3>${escapeHTML(map.name)}</h3>
-      <p><strong>Difficulté :</strong> ${escapeHTML(map.difficulty)}</p>
-      <p><strong>Boss :</strong> ${escapeHTML(map.boss)}</p>
+      <p><strong>Difficulty:</strong> ${escapeHTML(map.difficulty)}</p>
+      <p><strong>Boss:</strong> ${escapeHTML(map.boss)}</p>
     `;
 
     content.appendChild(card);
@@ -800,7 +800,7 @@ function openMap(map, push = true) {
 
   content.innerHTML = `
     <button class="back-btn" onclick="showMaps()">
-      ← Retour
+      ← Back
     </button>
 
     <div class="quest-detail">
@@ -813,7 +813,7 @@ function openMap(map, push = true) {
           rel="noopener noreferrer"
           class="mapgenie-btn"
         >
-          🗺 Voir la carte interactive sur Mapgenie
+          🗺 View interactive map on Mapgenie
         </a>
       ` : ""}
 
@@ -821,22 +821,22 @@ function openMap(map, push = true) {
         <div class="map-image-container" onclick="toggleMapZoom(this)">
           <img
             src="${escapeHTML(map.image)}"
-            alt="Aperçu ${escapeHTML(map.name)}"
+            alt="Preview ${escapeHTML(map.name)}"
             loading="lazy"
             class="map-full-img"
           >
-          <span class="map-zoom-hint">🔍 Tap pour zoomer</span>
+          <span class="map-zoom-hint">🔍 Tap to zoom</span>
         </div>
       ` : ""}
 
       <div class="detail-box">
-        <p><strong>Difficulté :</strong> ${escapeHTML(map.difficulty)}</p>
-        <p><strong>Boss :</strong> ${escapeHTML(map.boss)}</p>
-        <p><strong>Utilité :</strong> ${escapeHTML(map.use)}</p>
+        <p><strong>Difficulty:</strong> ${escapeHTML(map.difficulty)}</p>
+        <p><strong>Boss:</strong> ${escapeHTML(map.boss)}</p>
+        <p><strong>Notes:</strong> ${escapeHTML(map.use)}</p>
       </div>
 
       <div class="detail-box">
-        <h3>Extracts principales</h3>
+        <h3>Main Extracts</h3>
         ${map.extracts.map(extract => `
           <div class="objective">${escapeHTML(extract)}</div>
         `).join("")}
@@ -868,7 +868,7 @@ async function showHideout(push = true) {
     return;
   }
 
-  content.innerHTML = "<p>Chargement du hideout...</p>";
+  content.innerHTML = "<p>Loading hideout...</p>";
 
   const query = `
     {
@@ -901,7 +901,7 @@ async function showHideout(push = true) {
 
     if (result.errors) {
       console.error(result.errors);
-      content.innerHTML = "<p>Erreur API Hideout.</p>";
+      content.innerHTML = "<p>Hideout API error.</p>";
       return;
     }
 
@@ -910,7 +910,7 @@ async function showHideout(push = true) {
 
   } catch (error) {
     console.error(error);
-    content.innerHTML = "<p>Impossible de charger le hideout.</p>";
+    content.innerHTML = "<p>Unable to load hideout.</p>";
   }
 }
 
@@ -948,8 +948,8 @@ function displayHideoutStations(stations, push = true) {
 
     card.innerHTML = `
       <h3>${escapeHTML(station.name)}</h3>
-      <p>${station.levels.length} niveaux</p>
-      <p>${progress.completed} / ${progress.total} requis</p>
+      <p>${station.levels.length} levels</p>
+      <p>${progress.completed} / ${progress.total} required</p>
       <div class="progress-bar mini-progress">
         <div class="progress-fill" style="width: ${progress.percent}%;"></div>
       </div>
@@ -963,7 +963,7 @@ function displayHideoutStations(stations, push = true) {
 function displayHideoutDetails(station) {
   content.innerHTML = `
     <button class="back-btn" onclick="displayHideoutStations(allHideoutStations)">
-      ← Retour
+      ← Back
     </button>
 
     <div class="quest-detail">
@@ -973,13 +973,13 @@ function displayHideoutDetails(station) {
         class="favorite-btn"
         onclick='hideCompletedItems = !hideCompletedItems; displayHideoutDetails(allHideoutStations.find(s => s.id === "${escapeHTML(station.id)}"))'
       >
-        ${hideCompletedItems ? "👁 Afficher tous les objets" : "🎯 Afficher uniquement les objets manquants"}
+        ${hideCompletedItems ? "👁 Show all items" : "🎯 Show missing items only"}
       </button>
 
       ${
         station.levels.map(level => `
           <div class="detail-box">
-            <h3>Niveau ${level.level}</h3>
+            <h3>Level ${level.level}</h3>
 
             ${
               level.itemRequirements?.length > 0
@@ -1030,7 +1030,7 @@ function displayHideoutDetails(station) {
                         </div>
                       `;
                     }).join("")
-                : "<p>Aucun objet requis.</p>"
+                : "<p>No items required.</p>"
             }
           </div>
         `).join("")
@@ -1068,7 +1068,7 @@ function getHideoutItemProgress(itemKey) {
 
 /* =========================
    MARCHANDS
-   Requête filtrée : on ne charge que le trader demandé
+   Request filtrée : on ne charge que le trader demandé
 ========================= */
 
 async function showTraders(push = true) {
@@ -1084,7 +1084,7 @@ async function showTraders(push = true) {
     return;
   }
 
-  content.innerHTML = "<p>Chargement des marchands...</p>";
+  content.innerHTML = "<p>Loading traders...</p>";
 
   const query = `
     {
@@ -1107,7 +1107,7 @@ async function showTraders(push = true) {
 
     if (result.errors) {
       console.error(result.errors);
-      content.innerHTML = "<p>Erreur API Marchands.</p>";
+      content.innerHTML = "<p>Traders API error.</p>";
       return;
     }
 
@@ -1116,14 +1116,14 @@ async function showTraders(push = true) {
 
   } catch (error) {
     console.error(error);
-    content.innerHTML = "<p>Impossible de charger les marchands.</p>";
+    content.innerHTML = "<p>Unable to load traders.</p>";
   }
 }
 
 function displayTraders(traders, push = true) {
   if (push) pushHistory("traders");
   setActiveNav("traders");
-  content.innerHTML = "<h2>Marchands</h2>";
+  content.innerHTML = "<h2>Traders</h2>";
 
   traders.forEach(trader => {
     const card = document.createElement("div");
@@ -1135,7 +1135,7 @@ function displayTraders(traders, push = true) {
         ${trader.imageLink ? `<img src="${escapeHTML(trader.imageLink)}" alt="${escapeHTML(trader.name)}" loading="lazy">` : ""}
         <div>
           <h3>${escapeHTML(trader.name)}</h3>
-          <p>Voir les objets et échanges</p>
+          <p>View items and barters</p>
         </div>
       </div>
     `;
@@ -1147,9 +1147,9 @@ function displayTraders(traders, push = true) {
 async function displayTraderDetails(trader) {
   content.innerHTML = `
     <button class="back-btn" onclick="displayTraders(allTraders)">
-      ← Retour
+      ← Back
     </button>
-    <p>Chargement des offres de ${escapeHTML(trader.name)}...</p>
+    <p>Loading offers from ${escapeHTML(trader.name)}...</p>
   `;
 
   // Si ce trader a déjà ses offres chargées, on réutilise directement
@@ -1216,7 +1216,7 @@ async function displayTraderDetails(trader) {
 
     if (result.errors) {
       console.error(result.errors);
-      content.innerHTML = "<p>Erreur API offres marchand.</p>";
+      content.innerHTML = "<p>Trader offers API error.</p>";
       return;
     }
 
@@ -1227,7 +1227,7 @@ async function displayTraderDetails(trader) {
     const fullTrader = allTraders.find(t => t.id === trader.id);
 
     if (!fullTrader) {
-      content.innerHTML = "<p>Marchand introuvable.</p>";
+      content.innerHTML = "<p>Trader not found.</p>";
       return;
     }
 
@@ -1240,7 +1240,7 @@ async function displayTraderDetails(trader) {
 
   } catch (error) {
     console.error(error);
-    content.innerHTML = "<p>Impossible de charger les offres.</p>";
+    content.innerHTML = "<p>Unable to load offers.</p>";
   }
 }
 
@@ -1269,7 +1269,7 @@ function displayTraderOffers(trader) {
 
   content.innerHTML = `
     <button class="back-btn" onclick="displayTraders(allTraders)">
-      ← Retour
+      ← Back
     </button>
 
     <div class="quest-detail">
@@ -1279,22 +1279,22 @@ function displayTraderOffers(trader) {
         <input
           type="text"
           class="trader-search"
-          placeholder="Rechercher un objet marchand..."
+          placeholder="Search trader items..."
           value="${escapeHTML(pendingTraderSearch)}"
           oninput='pendingTraderSearch = this.value'
         />
         <button onclick='applyTraderSearch("${escapeHTML(trader.id)}")'>
-          🔍 Recherche
+          🔍 Search
         </button>
       </div>
 
       <div class="trader-tabs">
-        <button onclick='setTraderViewMode("sales", "${escapeHTML(trader.id)}")'>🛒 Ventes</button>
-        <button onclick='setTraderViewMode("barters", "${escapeHTML(trader.id)}")'>🔁 Échanges</button>
+        <button onclick='setTraderViewMode("sales", "${escapeHTML(trader.id)}")'>🛒 Sales</button>
+        <button onclick='setTraderViewMode("barters", "${escapeHTML(trader.id)}")'>🔁 Barters</button>
       </div>
 
       <div class="trader-filters">
-        <button onclick='setTraderLevelFilter("all", "${escapeHTML(trader.id)}")'>Tous</button>
+        <button onclick='setTraderLevelFilter("all", "${escapeHTML(trader.id)}")'>All</button>
         <button onclick='setTraderLevelFilter(1, "${escapeHTML(trader.id)}")'>LL1</button>
         <button onclick='setTraderLevelFilter(2, "${escapeHTML(trader.id)}")'>LL2</button>
         <button onclick='setTraderLevelFilter(3, "${escapeHTML(trader.id)}")'>LL3</button>
@@ -1305,21 +1305,21 @@ function displayTraderOffers(trader) {
         traderViewMode === "sales"
           ? `
             <div class="detail-box">
-              <h3>Objets vendus</h3>
+              <h3>Items for sale</h3>
               ${
                 filteredOffers?.length > 0
                   ? filteredOffers.slice(0, 100).map(offer => `
                       <div class="reward">
                         ${offer.item?.iconLink ? `<img src="${escapeHTML(offer.item.iconLink)}" alt="${escapeHTML(offer.item.name)}" loading="lazy">` : ""}
                         <span>
-                          ${escapeHTML(offer.item?.name) || "Objet inconnu"}
+                          ${escapeHTML(offer.item?.name) || "Unknown item"}
                           <br>
                           ${offer.price || 0} ${escapeHTML(offer.currency) || ""}
                           ${offer.minTraderLevel ? ` - LL${offer.minTraderLevel}` : ""}
                         </span>
                       </div>
                     `).join("")
-                  : "<p>Aucun objet trouvé.</p>"
+                  : "<p>No items found.</p>"
               }
             </div>
           `
@@ -1330,29 +1330,29 @@ function displayTraderOffers(trader) {
         traderViewMode === "barters"
           ? `
             <div class="detail-box">
-              <h3>Échanges</h3>
+              <h3>Barters</h3>
               ${
                 filteredBarters?.length > 0
                   ? filteredBarters.slice(0, 100).map(barter => `
                       <div class="barter-card">
                         <div class="barter-reward">
-                          <strong>Reçoit :</strong>
+                          <strong>Receives:</strong>
                           ${
                             barter.rewardItems?.map(reward => `
                               <div class="reward">
                                 ${reward.item?.iconLink ? `<img src="${escapeHTML(reward.item.iconLink)}" alt="${escapeHTML(reward.item.name)}" loading="lazy">` : ""}
-                                <span>${reward.count} x ${escapeHTML(reward.item?.name) || "Objet inconnu"}</span>
+                                <span>${reward.count} x ${escapeHTML(reward.item?.name) || "Unknown item"}</span>
                               </div>
                             `).join("")
                           }
                         </div>
                         <div class="barter-required">
-                          <strong>Donne :</strong>
+                          <strong>Gives:</strong>
                           ${
                             barter.requiredItems?.map(required => `
                               <div class="reward">
                                 ${required.item?.iconLink ? `<img src="${escapeHTML(required.item.iconLink)}" alt="${escapeHTML(required.item.name)}" loading="lazy">` : ""}
-                                <span>${required.count} x ${escapeHTML(required.item?.name) || "Objet inconnu"}</span>
+                                <span>${required.count} x ${escapeHTML(required.item?.name) || "Unknown item"}</span>
                               </div>
                             `).join("")
                           }
@@ -1360,7 +1360,7 @@ function displayTraderOffers(trader) {
                         <p>LL${barter.level || "?"}</p>
                       </div>
                     `).join("")
-                  : "<p>Aucun échange trouvé.</p>"
+                  : "<p>No barters found.</p>"
               }
             </div>
           `
@@ -1441,7 +1441,7 @@ function displayQuestsRaw(tasks) {
   if (tasks.length === 0) {
     const p = document.createElement("p");
     p.className = "no-result";
-    p.textContent = "Aucune quête trouvée.";
+    p.textContent = "No quests found.";
     content.appendChild(p);
     return;
   }
@@ -1459,9 +1459,9 @@ function displayQuestsRaw(tasks) {
         ${task.kappaRequired ? '<span class="kappa-badge">🟣 Kappa</span>' : ""}
       </h3>
       <p>
-        ${escapeHTML(task.trader?.name) || "Inconnu"}
+        ${escapeHTML(task.trader?.name) || "Unknown"}
         ${task.map?.name ? `· ${escapeHTML(task.map.name)}` : ""}
-        ${task.minPlayerLevel ? `· Niv. ${task.minPlayerLevel}` : ""}
+        ${task.minPlayerLevel ? `· Lvl. ${task.minPlayerLevel}` : ""}
       </p>
     `;
 
@@ -1515,10 +1515,10 @@ function showFavorites(push = true) {
   if (cachedTasks) allTasks = cachedTasks;
   if (cachedItems) allItems = cachedItems;
 
-  content.innerHTML = "<h2>Favoris</h2>";
+  content.innerHTML = "<h2>Favorites</h2>";
 
   if (favorites.length === 0) {
-    content.innerHTML += "<p>Aucun favori.</p>";
+    content.innerHTML += "<p>No favorites yet.</p>";
     return;
   }
 
@@ -1537,14 +1537,14 @@ function showFavorites(push = true) {
 }
 
 function openFavorite(fav) {
-  if (fav.type === "quête") {
+  if (fav.type === "quest") {
     const task = allTasks.find(task => task.id === fav.id);
-    task ? displayQuestDetails(task) : alert("Charge d'abord les quêtes.");
+    task ? displayQuestDetails(task) : alert("Charge d'abord les quests.");
   }
 
-  if (fav.type === "objet") {
+  if (fav.type === "item") {
     const item = allItems.find(item => item.id === fav.id);
-    item ? displayItemDetails(item) : alert("Charge d'abord les objets.");
+    item ? displayItemDetails(item) : alert("Charge d'abord les items.");
   }
 }
 
@@ -1582,7 +1582,7 @@ function toggleObjective(taskId, objIndex) {
   completedObjectives[key] = !completedObjectives[key];
   localStorage.setItem("completedObjectives", JSON.stringify(completedObjectives));
 
-  // Auto-complétion : si tous les objectifs sont cochés → quête terminée
+  // Auto-complétion : si tous les objectifs sont cochés → quest terminée
   const task = allTasks.find(t => t.id === taskId);
   if (task?.objectives?.length > 0) {
     const allDone = task.objectives.every((_, i) => isObjectiveComplete(taskId, i));
@@ -1629,7 +1629,7 @@ function updateQuestCompletionUI(taskId) {
   const btn = document.getElementById(`complete-btn-${taskId}`);
   if (!btn) return;
   const done = completedTasks.includes(taskId);
-  btn.textContent = done ? "✔ Quête terminée" : "❌ Marquer comme terminée";
+  btn.textContent = done ? "✔ Quest completed" : "❌ Mark as completed";
   btn.style.background = done ? "var(--success)" : "";
 }
 
@@ -1670,11 +1670,11 @@ function showKappaTasks() {
   ];
 
   content.innerHTML = `
-    <button class="back-btn" onclick="displayQuests(allTasks)">← Retour</button>
-    <h2>🟣 Quêtes Kappa</h2>
+    <button class="back-btn" onclick="displayQuests(allTasks)">← Back</button>
+    <h2>🟣 Kappa Quests</h2>
     <div class="detail-box" style="margin-bottom:16px">
       <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-        <span style="font-weight:700;color:var(--accent)">${done} / ${total} quêtes</span>
+        <span style="font-weight:700;color:var(--accent)">${done} / ${total} quests</span>
         <span style="font-weight:700;color:var(--accent)">${pct}%</span>
       </div>
       <div class="progress-bar">
@@ -1697,7 +1697,7 @@ function showKappaTasks() {
         ${escapeHTML(task.name)}
       </h3>
       <p>
-        ${escapeHTML(task.trader?.name) || "Inconnu"}
+        ${escapeHTML(task.trader?.name) || "Unknown"}
         ${task.map?.name ? `· ${escapeHTML(task.map.name)}` : ""}
       </p>
       ${objProgress && !completedTasks.includes(task.id) ? `
@@ -1733,7 +1733,7 @@ function showHome(push = true) {
 
   const kappa = getKappaProgress();
 
-  // Quêtes en cours (non terminées, avec données disponibles)
+  // Quests en cours (non terminées, avec données disponibles)
   const inProgressTasks = allTasks
     .filter(t => !completedTasks.includes(t.id))
     .slice(0, 3);
@@ -1744,7 +1744,7 @@ function showHome(push = true) {
     return p.percent < 100;
   });
 
-  // Favoris récents
+  // Recent Favorites
   const recentFavorites = favorites.slice(-3).reverse();
 
   content.innerHTML = `
@@ -1753,7 +1753,7 @@ function showHome(push = true) {
       <!-- HERO BANNER -->
       <div class="dashboard-hero">
         <div class="dashboard-hero-text">
-          <h1>Raid Companion</h1>
+          <h1>WikiTarkov</h1>
           <p>Companion App • Escape From Tarkov</p>
         </div>
       </div>
@@ -1762,14 +1762,14 @@ function showHome(push = true) {
       <div class="dashboard-card kappa-card" onclick="showKappaTasks()">
         <div class="dashboard-card-header">
           <span class="dashboard-card-icon">🟣</span>
-          <span class="dashboard-card-title">Progression Kappa</span>
+          <span class="dashboard-card-title">Kappa Progress</span>
           <span class="dashboard-card-chevron">›</span>
         </div>
         <div class="progress-bar" style="margin: 10px 0 6px">
           <div class="progress-fill" style="width: ${kappa.percent}%"></div>
         </div>
         <div class="kappa-stats-row">
-          <span>${kappa.completed} / ${kappa.total} quêtes</span>
+          <span>${kappa.completed} / ${kappa.total} quests</span>
           <span class="kappa-pct">${kappa.percent}%</span>
         </div>
       </div>
@@ -1777,16 +1777,16 @@ function showHome(push = true) {
       <!-- QUÊTES EN COURS -->
       <div class="dashboard-section">
         <div class="dashboard-section-header">
-          <span>📋 Quêtes à faire</span>
-          <button class="dashboard-see-all" onclick="getQuests()">Voir tout →</button>
+          <span>📋 Quests to do</span>
+          <button class="dashboard-see-all" onclick="getQuests()">See all →</button>
         </div>
         ${allTasks.length === 0 ? `
           <div class="dashboard-empty" onclick="getQuests()">
-            <p>Charge les quêtes pour voir ta progression</p>
+            <p>Charge les quests pour voir ta progression</p>
           </div>
         ` : inProgressTasks.length === 0 ? `
           <div class="dashboard-empty">
-            <p>🎉 Toutes les quêtes sont terminées !</p>
+            <p>🎉 All les quests sont terminées !</p>
           </div>
         ` : inProgressTasks.map(task => `
           <div class="dashboard-task-card" onclick="getQuests()">
@@ -1806,11 +1806,11 @@ function showHome(push = true) {
       <div class="dashboard-section">
         <div class="dashboard-section-header">
           <span>🏚 Hideout</span>
-          <button class="dashboard-see-all" onclick="showHideout()">Voir tout →</button>
+          <button class="dashboard-see-all" onclick="showHideout()">See all →</button>
         </div>
         ${allHideoutStations.length === 0 ? `
           <div class="dashboard-empty" onclick="showHideout()">
-            <p>Charge le hideout pour voir la progression</p>
+            <p>Load hideout to see your progress</p>
           </div>
         ` : `
           <div class="dashboard-hideout-grid">
@@ -1829,10 +1829,10 @@ function showHome(push = true) {
           </div>
           ${hideoutIncomplete.length > 4 ? `
             <p class="dashboard-more" onclick="showHideout()">
-              + ${hideoutIncomplete.length - 4} stations à compléter
+              + ${hideoutIncomplete.length - 4} stations to complete
             </p>
           ` : hideoutIncomplete.length === 0 ? `
-            <p class="dashboard-empty-text">🎉 Hideout complet !</p>
+            <p class="dashboard-empty-text">🎉 Hideout complete !</p>
           ` : ""}
         `}
       </div>
@@ -1841,8 +1841,8 @@ function showHome(push = true) {
       ${recentFavorites.length > 0 ? `
         <div class="dashboard-section">
           <div class="dashboard-section-header">
-            <span>⭐ Favoris récents</span>
-            <button class="dashboard-see-all" onclick="showFavorites()">Voir tout →</button>
+            <span>⭐ Recent Favorites</span>
+            <button class="dashboard-see-all" onclick="showFavorites()">See all →</button>
           </div>
           ${recentFavorites.map(fav => `
             <div class="dashboard-task-card" onclick="openFavorite(${JSON.stringify(fav).replace(/"/g, '&quot;')})">
@@ -1859,13 +1859,13 @@ function showHome(push = true) {
       <!-- ACCÈS RAPIDE -->
       <div class="dashboard-section">
         <div class="dashboard-section-header">
-          <span>⚡ Accès rapide</span>
+          <span>⚡ Quick Access</span>
         </div>
         <div class="dashboard-quick-grid">
           <button class="dashboard-quick-btn" onclick="showMaps()">🗺<span>Maps</span></button>
           <button class="dashboard-quick-btn" onclick="showAmmo()">🔫<span>Ammo</span></button>
-          <button class="dashboard-quick-btn" onclick="showTraders()">💰<span>Marchands</span></button>
-          <button class="dashboard-quick-btn" onclick="showItems()">🎒<span>Objets</span></button>
+          <button class="dashboard-quick-btn" onclick="showTraders()">💰<span>Traders</span></button>
+          <button class="dashboard-quick-btn" onclick="showItems()">🎒<span>Items</span></button>
         </div>
       </div>
 
@@ -1875,7 +1875,7 @@ function showHome(push = true) {
 
 /* =========================
    AMMO
-   Cache ajouté (comme les quêtes et objets)
+   Cache ajouté (comme les quests et items)
 ========================= */
 
 async function showAmmo(push = true) {
@@ -1885,7 +1885,7 @@ async function showAmmo(push = true) {
   searchInput.style.display = "block";
   searchInput.value = "";
 
-  content.innerHTML = "<p>Chargement des munitions...</p>";
+  content.innerHTML = "<p>Loading ammo...</p>";
 
   const cachedAmmo = loadFromCache("cachedAmmo");
 
@@ -1933,7 +1933,7 @@ async function showAmmo(push = true) {
 
     if (result.errors) {
       console.error(result.errors);
-      content.innerHTML = "<p>Erreur API munitions.</p>";
+      content.innerHTML = "<p>Ammo API error.</p>";
       return;
     }
 
@@ -1943,15 +1943,15 @@ async function showAmmo(push = true) {
 
   } catch (error) {
     console.error(error);
-    content.innerHTML = "<p>Impossible de charger les munitions.</p>";
+    content.innerHTML = "<p>Unable to load ammo.</p>";
   }
 }
 
 function getArmorClassInfo(pen) {
-  if (pen >= 50) return { label: "Très efficace classe 5/6", className: "armor-red" };
-  if (pen >= 40) return { label: "Efficace classe 4/5", className: "armor-orange" };
-  if (pen >= 30) return { label: "Correct classe 3/4", className: "armor-yellow" };
-  return { label: "Faible pénétration", className: "armor-green" };
+  if (pen >= 50) return { label: "Very effective class 5/6", className: "armor-red" };
+  if (pen >= 40) return { label: "Effective class 4/5", className: "armor-orange" };
+  if (pen >= 30) return { label: "Decent class 3/4", className: "armor-yellow" };
+  return { label: "Low penetration", className: "armor-green" };
 }
 
 function displayAmmo(ammoList, push = true) {
@@ -1970,7 +1970,7 @@ function displayAmmo(ammoList, push = true) {
     <div class="ammo-top-bar">
       <div class="ammo-caliber-filter">
         <select onchange="setAmmoCaliberFilter(this.value)">
-          <option value="all">Tous les calibres</option>
+          <option value="all">All calibers</option>
           ${calibers.map(caliber => `
             <option value="${escapeHTML(caliber)}" ${selectedAmmoCaliber === caliber ? "selected" : ""}>
               ${escapeHTML(caliber)}
@@ -1981,7 +1981,7 @@ function displayAmmo(ammoList, push = true) {
 
       ${ammoComparison.length > 0 ? `
         <button class="compare-trigger-btn" onclick="showAmmoComparison()">
-          ⚖ Comparer (${ammoComparison.length})
+          ⚖ Compare (${ammoComparison.length})
         </button>
       ` : ""}
     </div>
@@ -1995,7 +1995,7 @@ function displayAmmo(ammoList, push = true) {
           </div>
         `).join("")}
         ${ammoComparison.length >= 2 ? `
-          <button class="compare-go-btn" onclick="showAmmoComparison()">Voir →</button>
+          <button class="compare-go-btn" onclick="showAmmoComparison()">View →</button>
         ` : ""}
       </div>
     ` : ""}
@@ -2013,8 +2013,8 @@ function displayAmmo(ammoList, push = true) {
       <div class="item-card">
         ${ammo.item?.iconLink ? `<img src="${escapeHTML(ammo.item.iconLink)}" alt="${escapeHTML(ammo.item.name)}" loading="lazy">` : ""}
         <div style="flex:1">
-          <h3>${escapeHTML(ammo.item?.name) || "Munition inconnue"}</h3>
-          <p><strong>Pen :</strong> ${ammo.penetrationPower || 0} &nbsp;·&nbsp; <strong>Dégâts :</strong> ${ammo.damage || 0}</p>
+          <h3>${escapeHTML(ammo.item?.name) || "Unknown ammo"}</h3>
+          <p><strong>Pen:</strong> ${ammo.penetrationPower || 0} &nbsp;·&nbsp; <strong>Damage:</strong> ${ammo.damage || 0}</p>
           <p><span class="${armorInfo.className}">${armorInfo.label}</span></p>
         </div>
         <button
@@ -2066,42 +2066,42 @@ function displayAmmoDetail(ammo) {
   };
 
   content.innerHTML = `
-    <button class="back-btn" onclick="displayAmmo(allAmmo, false)">← Retour</button>
+    <button class="back-btn" onclick="displayAmmo(allAmmo, false)">← Back</button>
 
     <div class="quest-detail">
       <div class="ammo-detail-header">
         ${ammo.item?.iconLink ? `<img src="${escapeHTML(ammo.item.iconLink)}" alt="${escapeHTML(ammo.item.name)}" loading="lazy" class="ammo-detail-icon">` : ""}
         <div>
-          <h2 style="margin:0 0 4px">${escapeHTML(ammo.item?.name) || "Munition inconnue"}</h2>
-          <p style="margin:0; color:var(--muted)">${escapeHTML(ammo.caliber) || "Calibre inconnu"}</p>
+          <h2 style="margin:0 0 4px">${escapeHTML(ammo.item?.name) || "Unknown ammo"}</h2>
+          <p style="margin:0; color:var(--muted)">${escapeHTML(ammo.caliber) || "Unknown caliber"}</p>
           ${ammo.tracer ? `<span class="kappa-badge" style="background:#8b6914">🔦 Traceur ${escapeHTML(ammo.tracerColor || "")}</span>` : ""}
           ${ammo.ammoType ? `<span class="kappa-badge" style="background:var(--surface-3); color:var(--muted)">${escapeHTML(ammo.ammoType)}</span>` : ""}
         </div>
       </div>
 
       <div class="detail-box">
-        <h3>Stats principales</h3>
+        <h3>Main Stats</h3>
 
         <div class="stat-row">
-          <span class="stat-label">Dégâts</span>
+          <span class="stat-label">Damage</span>
           ${statBar(ammo.damage || 0, 200, "bar-damage")}
         </div>
         <div class="stat-row">
-          <span class="stat-label">Pénétration</span>
+          <span class="stat-label">Penetration</span>
           ${statBar(ammo.penetrationPower || 0, 70, "bar-pen")}
         </div>
         <div class="stat-row">
-          <span class="stat-label">Dégâts armure</span>
+          <span class="stat-label">Armor damage</span>
           ${statBar(ammo.armorDamage || 0, 100, "bar-armor")}
         </div>
 
         <p class="ammo-armor-class">
-          Classe armure : <span class="${armorInfo.className}">${armorInfo.label}</span>
+          Armor class: <span class="${armorInfo.className}">${armorInfo.label}</span>
         </p>
       </div>
 
       <div class="detail-box">
-        <h3>Stats secondaires</h3>
+        <h3>Secondary Stats</h3>
         <div class="ammo-stats-grid">
           <div class="ammo-stat-cell">
             <span class="ammo-stat-label">Fragmentation</span>
@@ -2112,23 +2112,23 @@ function displayAmmoDetail(ammo) {
             <span class="ammo-stat-value">${fmtPct(ammo.ricochetChance)}</span>
           </div>
           <div class="ammo-stat-cell">
-            <span class="ammo-stat-label">Saignement lourd</span>
+            <span class="ammo-stat-label">Heavy bleed</span>
             <span class="ammo-stat-value">${fmtPct(ammo.heavyBleedModifier)}</span>
           </div>
           <div class="ammo-stat-cell">
-            <span class="ammo-stat-label">Saignement léger</span>
+            <span class="ammo-stat-label">Light bleed</span>
             <span class="ammo-stat-value">${fmtPct(ammo.lightBleedModifier)}</span>
           </div>
           <div class="ammo-stat-cell">
-            <span class="ammo-stat-label">Précision</span>
+            <span class="ammo-stat-label">Accuracy</span>
             <span class="ammo-stat-value">${fmtMod(ammo.accuracyModifier)}</span>
           </div>
           <div class="ammo-stat-cell">
-            <span class="ammo-stat-label">Recul</span>
+            <span class="ammo-stat-label">Recoil</span>
             <span class="ammo-stat-value">${fmtMod(ammo.recoilModifier)}</span>
           </div>
           <div class="ammo-stat-cell">
-            <span class="ammo-stat-label">Vitesse initiale</span>
+            <span class="ammo-stat-label">Initial speed</span>
             <span class="ammo-stat-value">${fmt(ammo.initialSpeed, " m/s")}</span>
           </div>
         </div>
@@ -2136,14 +2136,14 @@ function displayAmmoDetail(ammo) {
 
       <button
         class="compare-add-btn ${ammoComparison.some(a => a.item?.id === ammo.item?.id) ? "compare-add-btn--active" : ""}"
-        onclick="toggleAmmoComparison('${escapeHTML(ammo.item?.id)}'); this.textContent = ammoComparison.some(a => a.item?.id === '${escapeHTML(ammo.item?.id)}') ? '✔ Dans la comparaison' : '⚖ Ajouter à la comparaison'; this.classList.toggle('compare-add-btn--active')"
+        onclick="toggleAmmoComparison('${escapeHTML(ammo.item?.id)}'); this.textContent = ammoComparison.some(a => a.item?.id === '${escapeHTML(ammo.item?.id)}') ? '✔ In comparison' : '⚖ Add to comparison'; this.classList.toggle('compare-add-btn--active')"
       >
-        ${ammoComparison.some(a => a.item?.id === ammo.item?.id) ? "✔ Dans la comparaison" : "⚖ Ajouter à la comparaison"}
+        ${ammoComparison.some(a => a.item?.id === ammo.item?.id) ? "✔ In comparison" : "⚖ Add to comparison"}
       </button>
 
       ${ammoComparison.length >= 2 ? `
         <button class="compare-trigger-btn" onclick="showAmmoComparison()">
-          ⚖ Voir la comparaison (${ammoComparison.length})
+          ⚖ View comparison (${ammoComparison.length})
         </button>
       ` : ""}
     </div>
@@ -2178,14 +2178,14 @@ function showAmmoComparison() {
   const cols = ammoComparison.length; // 2 ou 3
 
   const stats = [
-    { key: "damage",              label: "Dégâts",           max: 200, bar: "bar-damage", higherBetter: true },
-    { key: "penetrationPower",    label: "Pénétration",      max: 70,  bar: "bar-pen",    higherBetter: true },
-    { key: "armorDamage",         label: "Dégâts armure",    max: 100, bar: "bar-armor",  higherBetter: true },
+    { key: "damage",              label: "Damage",           max: 200, bar: "bar-damage", higherBetter: true },
+    { key: "penetrationPower",    label: "Penetration",      max: 70,  bar: "bar-pen",    higherBetter: true },
+    { key: "armorDamage",         label: "Armor damage",    max: 100, bar: "bar-armor",  higherBetter: true },
     { key: "fragmentationChance", label: "Fragmentation",    pct: true,  higherBetter: true },
-    { key: "heavyBleedModifier",  label: "Saign. lourd",     pct: true,  higherBetter: true },
-    { key: "initialSpeed",        label: "Vitesse (m/s)",    max: 1000,  higherBetter: true },
-    { key: "accuracyModifier",    label: "Précision",        mod: true,  higherBetter: false },
-    { key: "recoilModifier",      label: "Recul",            mod: true,  higherBetter: false },
+    { key: "heavyBleedModifier",  label: "Heavy bleed",     pct: true,  higherBetter: true },
+    { key: "initialSpeed",        label: "Speed (m/s)",    max: 1000,  higherBetter: true },
+    { key: "accuracyModifier",    label: "Accuracy",        mod: true,  higherBetter: false },
+    { key: "recoilModifier",      label: "Recoil",            mod: true,  higherBetter: false },
   ];
 
   const formatVal = (ammo, stat) => {
@@ -2251,9 +2251,9 @@ function showAmmoComparison() {
   }).join("");
 
   content.innerHTML = `
-    <button class="back-btn" onclick="displayAmmo(allAmmo, false)">← Retour</button>
+    <button class="back-btn" onclick="displayAmmo(allAmmo, false)">← Back</button>
 
-    <h2>⚖ Comparaison</h2>
+    <h2>⚖ Comparison</h2>
 
     <div class="compare-table cols-${cols}">
       ${headerCells}
@@ -2265,7 +2265,7 @@ function showAmmoComparison() {
       style="margin-top: 4px"
       onclick="ammoComparison = []; displayAmmo(allAmmo, false)"
     >
-      ✕ Vider la comparaison
+      ✕ Clear comparison
     </button>
   `;
 }
@@ -2287,8 +2287,8 @@ function setAmmoCaliberFilter(caliber) {
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker
     .register("service-worker.js")
-    .then(() => console.log("Service Worker enregistré"))
-    .catch(error => console.error("SW erreur :", error));
+    .then(() => console.log("Service Worker registered"))
+    .catch(error => console.error("SW error :", error));
 }
 
 /* =========================

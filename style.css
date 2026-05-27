@@ -638,6 +638,77 @@ button:focus-visible {
    RESPONSIVE
 ========================= */
 
+/* =========================
+   FILTRES QUÊTES
+========================= */
+
+.quest-filters {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quest-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quest-filter-row label {
+  flex: 0 0 72px;
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.quest-filter-row select {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.reset-filter-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--surface-3);
+  color: var(--danger);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  min-height: 40px;
+}
+
+/* Quête terminée — légèrement atténuée */
+.card.quest-complete {
+  opacity: 0.6;
+  border-left-color: var(--success);
+}
+
+/* =========================
+   PAGINATION OBJETS
+========================= */
+
+.load-more-btn {
+  width: 100%;
+  margin: 8px 0 20px;
+  padding: 14px;
+  background: var(--surface-2);
+  color: var(--accent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.load-more-btn:hover {
+  background: var(--surface-3);
+}
+
 @media (max-width: 420px) {
   main {
     padding-inline: 14px;

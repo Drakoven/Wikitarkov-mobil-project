@@ -19,6 +19,15 @@ let pendingTraderSearch = "";
 let selectedAmmoPen = 0;
 let selectedAmmoCaliber = "all";
 
+// Pagination objets
+let itemsPage = 0;
+const ITEMS_PER_PAGE = 40;
+let currentFilteredItems = [];
+
+// Filtres quêtes
+let questFilterTrader = "all";
+let questFilterMap = "all";
+
 let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
 let completedTasks = JSON.parse(localStorage.getItem("completedTasks")) || [];
 let hideoutItemProgress = JSON.parse(localStorage.getItem("hideoutItemProgress")) || {};
@@ -317,11 +326,61 @@ async function getQuests(push = true) {
 function displayQuests(tasks, push = true) {
   if (push) pushHistory("quests");
   setActiveNav("quests");
-  content.innerHTML = "<h2>Quêtes</h2>";
 
-  tasks.forEach(task => {
+  // Listes uniques pour les filtres
+  const traders = ["all", ...new Set(tasks.map(t => t.trader?.name).filter(Boolean))].sort();
+  const maps = ["all", ...new Set(tasks.map(t => t.map?.name).filter(Boolean))].sort();
+
+  // Filtrage
+  const filtered = tasks.filter(task => {
+    const traderMatch = questFilterTrader === "all" || task.trader?.name === questFilterTrader;
+    const mapMatch = questFilterMap === "all" || task.map?.name === questFilterMap;
+    return traderMatch && mapMatch;
+  });
+
+  content.innerHTML = `
+    <h2>Quêtes <span style="font-size:14px; color:var(--muted)">(${filtered.length})</span></h2>
+
+    <div class="quest-filters">
+      <div class="quest-filter-row">
+        <label>Marchand</label>
+        <select onchange="setQuestFilter('trader', this.value)">
+          ${traders.map(t => `
+            <option value="${escapeHTML(t)}" ${questFilterTrader === t ? "selected" : ""}>
+              ${t === "all" ? "Tous" : escapeHTML(t)}
+            </option>
+          `).join("")}
+        </select>
+      </div>
+
+      <div class="quest-filter-row">
+        <label>Map</label>
+        <select onchange="setQuestFilter('map', this.value)">
+          ${maps.map(m => `
+            <option value="${escapeHTML(m)}" ${questFilterMap === m ? "selected" : ""}>
+              ${m === "all" ? "Toutes" : escapeHTML(m)}
+            </option>
+          `).join("")}
+        </select>
+      </div>
+
+      ${questFilterTrader !== "all" || questFilterMap !== "all" ? `
+        <button class="reset-filter-btn" onclick="resetQuestFilters()">
+          ✕ Réinitialiser les filtres
+        </button>
+      ` : ""}
+    </div>
+  `;
+
+  if (filtered.length === 0) {
+    content.innerHTML += "<p>Aucune quête pour ces filtres.</p>";
+    return;
+  }
+
+  filtered.forEach(task => {
     const card = document.createElement("div");
     card.className = "card";
+    if (isTaskComplete(task.id)) card.classList.add("quest-complete");
     card.onclick = () => displayQuestDetails(task);
 
     card.innerHTML = `
@@ -330,11 +389,27 @@ function displayQuests(tasks, push = true) {
         ${escapeHTML(task.name)}
         ${task.kappaRequired ? '<span class="kappa-badge">🟣 Kappa</span>' : ""}
       </h3>
-      <p>Marchand : ${escapeHTML(task.trader?.name) || "Inconnu"}</p>
+      <p>
+        ${escapeHTML(task.trader?.name) || "Inconnu"}
+        ${task.map?.name ? `· ${escapeHTML(task.map.name)}` : ""}
+        ${task.minPlayerLevel ? `· Niv. ${task.minPlayerLevel}` : ""}
+      </p>
     `;
 
     content.appendChild(card);
   });
+}
+
+function setQuestFilter(type, value) {
+  if (type === "trader") questFilterTrader = value;
+  if (type === "map") questFilterMap = value;
+  displayQuests(allTasks);
+}
+
+function resetQuestFilters() {
+  questFilterTrader = "all";
+  questFilterMap = "all";
+  displayQuests(allTasks);
 }
 
 function displayQuestDetails(task, push = true) {
@@ -508,10 +583,36 @@ async function showItems(push = true) {
 function displayItems(items, push = true) {
   if (push) pushHistory("items");
   setActiveNav("items");
-  content.innerHTML = "<h2>Objets</h2>";
 
-  // Limite à 100 résultats pour les performances
-  items.slice(0, 100).forEach(item => {
+  // On garde la liste filtrée en mémoire pour le "Charger plus"
+  currentFilteredItems = items;
+  itemsPage = 0;
+
+  content.innerHTML = `
+    <h2>Objets <span id="items-count" style="font-size:14px; color:var(--muted)"></span></h2>
+    <div id="items-list"></div>
+    <div id="items-load-more"></div>
+  `;
+
+  renderItemsPage();
+}
+
+function renderItemsPage() {
+  const start = 0;
+  const end = (itemsPage + 1) * ITEMS_PER_PAGE;
+  const visible = currentFilteredItems.slice(start, end);
+  const total = currentFilteredItems.length;
+
+  // Compteur
+  const counter = document.getElementById("items-count");
+  if (counter) counter.textContent = `(${Math.min(end, total)} / ${total})`;
+
+  // Rendu des cartes
+  const list = document.getElementById("items-list");
+  if (!list) return;
+  list.innerHTML = "";
+
+  visible.forEach(item => {
     const card = document.createElement("div");
     card.className = "card";
     card.onclick = () => displayItemDetails(item);
@@ -522,13 +623,42 @@ function displayItems(items, push = true) {
         <div>
           <h3>${escapeHTML(item.name)}</h3>
           <p>${escapeHTML(item.category?.name) || "Inconnu"}</p>
-          <p>${item.avg24hPrice || 0}₽</p>
+          <p>${item.avg24hPrice ? item.avg24hPrice.toLocaleString("fr-FR") + " ₽" : "Non disponible"}</p>
         </div>
       </div>
     `;
 
-    content.appendChild(card);
+    list.appendChild(card);
   });
+
+  // Bouton "Charger plus"
+  const loadMore = document.getElementById("items-load-more");
+  if (!loadMore) return;
+
+  if (end < total) {
+    loadMore.innerHTML = `
+      <button class="load-more-btn" onclick="loadMoreItems()">
+        Charger plus (${total - end} restants)
+      </button>
+    `;
+  } else {
+    loadMore.innerHTML = `
+      <p style="text-align:center; color:var(--muted); padding: 16px 0;">
+        Tous les objets affichés (${total})
+      </p>
+    `;
+  }
+}
+
+function loadMoreItems() {
+  itemsPage++;
+  renderItemsPage();
+  // Scroll doux vers les nouvelles cartes
+  const list = document.getElementById("items-list");
+  if (list) {
+    const lastCard = list.lastElementChild;
+    if (lastCard) lastCard.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 }
 
 function displayItemDetails(item, push = true) {
@@ -1159,7 +1289,14 @@ const handleSearch = debounce(() => {
     const filteredTasks = allTasks.filter(task =>
       task.name.toLowerCase().includes(value)
     );
-    displayQuests(filteredTasks);
+    // On applique la recherche texte par-dessus les filtres actifs
+    const withFilters = filteredTasks.filter(task => {
+      const traderMatch = questFilterTrader === "all" || task.trader?.name === questFilterTrader;
+      const mapMatch = questFilterMap === "all" || task.map?.name === questFilterMap;
+      return traderMatch && mapMatch;
+    });
+    // On affiche sans repousser l'historique ni réinitialiser les filtres
+    displayQuestsRaw(withFilters);
   }
 
   if (currentSection === "items") {
@@ -1167,7 +1304,7 @@ const handleSearch = debounce(() => {
       item.name.toLowerCase().includes(value) ||
       item.shortName?.toLowerCase().includes(value)
     );
-    displayItems(filteredItems);
+    displayItems(filteredItems, false);
   }
 
   if (currentSection === "ammo") {
@@ -1176,9 +1313,50 @@ const handleSearch = debounce(() => {
       ammo.item?.shortName?.toLowerCase().includes(value) ||
       ammo.caliber?.toLowerCase().includes(value)
     );
-    displayAmmo(filteredAmmo);
+    displayAmmo(filteredAmmo, false);
   }
 }, 250);
+
+// Version interne de displayQuests sans reconstruire les filtres
+// utilisée uniquement par la recherche texte
+function displayQuestsRaw(tasks) {
+  // On vide uniquement les cartes, pas les filtres
+  const existing = document.querySelectorAll("#content .card");
+  existing.forEach(c => c.remove());
+
+  const noResult = document.querySelector("#content .no-result");
+  if (noResult) noResult.remove();
+
+  if (tasks.length === 0) {
+    const p = document.createElement("p");
+    p.className = "no-result";
+    p.textContent = "Aucune quête trouvée.";
+    content.appendChild(p);
+    return;
+  }
+
+  tasks.forEach(task => {
+    const card = document.createElement("div");
+    card.className = "card";
+    if (isTaskComplete(task.id)) card.classList.add("quest-complete");
+    card.onclick = () => displayQuestDetails(task);
+
+    card.innerHTML = `
+      <h3>
+        ${isTaskComplete(task.id) ? "✔ " : ""}
+        ${escapeHTML(task.name)}
+        ${task.kappaRequired ? '<span class="kappa-badge">🟣 Kappa</span>' : ""}
+      </h3>
+      <p>
+        ${escapeHTML(task.trader?.name) || "Inconnu"}
+        ${task.map?.name ? `· ${escapeHTML(task.map.name)}` : ""}
+        ${task.minPlayerLevel ? `· Niv. ${task.minPlayerLevel}` : ""}
+      </p>
+    `;
+
+    content.appendChild(card);
+  });
+}
 
 searchInput.addEventListener("input", handleSearch);
 

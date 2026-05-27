@@ -1753,7 +1753,7 @@ function showHome(push = true) {
       <!-- HERO BANNER -->
       <div class="dashboard-hero">
         <div class="dashboard-hero-text">
-          <h1>WikiTarkov</h1>
+          <h1>Raid Companion</h1>
           <p>Companion App • Escape From Tarkov</p>
         </div>
       </div>

@@ -1847,85 +1847,94 @@ function showAmmoComparison() {
 
   setActiveNav("ammo");
 
+  const cols = ammoComparison.length; // 2 ou 3
+
   const stats = [
-    { key: "damage",              label: "Dégâts",           max: 200, bar: "bar-damage" },
-    { key: "penetrationPower",    label: "Pénétration",      max: 70,  bar: "bar-pen" },
-    { key: "armorDamage",         label: "Dégâts armure",    max: 100, bar: "bar-armor" },
-    { key: "fragmentationChance", label: "Fragmentation",    pct: true },
-    { key: "heavyBleedModifier",  label: "Saignement lourd", pct: true },
-    { key: "initialSpeed",        label: "Vitesse (m/s)",    max: 1000 },
-    { key: "accuracyModifier",    label: "Précision",        mod: true },
-    { key: "recoilModifier",      label: "Recul",            mod: true },
+    { key: "damage",              label: "Dégâts",           max: 200, bar: "bar-damage", higherBetter: true },
+    { key: "penetrationPower",    label: "Pénétration",      max: 70,  bar: "bar-pen",    higherBetter: true },
+    { key: "armorDamage",         label: "Dégâts armure",    max: 100, bar: "bar-armor",  higherBetter: true },
+    { key: "fragmentationChance", label: "Fragmentation",    pct: true,  higherBetter: true },
+    { key: "heavyBleedModifier",  label: "Saign. lourd",     pct: true,  higherBetter: true },
+    { key: "initialSpeed",        label: "Vitesse (m/s)",    max: 1000,  higherBetter: true },
+    { key: "accuracyModifier",    label: "Précision",        mod: true,  higherBetter: false },
+    { key: "recoilModifier",      label: "Recul",            mod: true,  higherBetter: false },
   ];
 
   const formatVal = (ammo, stat) => {
     const val = ammo[stat.key];
-    if (val === undefined || val === null) return "N/A";
+    if (val === undefined || val === null) return "—";
     if (stat.pct) return `${Math.round(val * 100)}%`;
     if (stat.mod) {
       const pct = Math.round(val * 100);
       return pct > 0 ? `+${pct}%` : `${pct}%`;
     }
-    return val;
+    return String(val);
   };
 
   const bestVal = (stat) => {
-    const vals = ammoComparison.map(a => a[stat.key] ?? -Infinity);
-    // Pour recul et précision : le plus bas est le mieux (mod négatif = bien)
-    if (stat.key === "recoilModifier" || stat.key === "accuracyModifier") return Math.min(...vals);
-    return Math.max(...vals);
+    const vals = ammoComparison
+      .map(a => a[stat.key])
+      .filter(v => v !== undefined && v !== null);
+    if (vals.length === 0) return null;
+    return stat.higherBetter ? Math.max(...vals) : Math.min(...vals);
   };
+
+  // En-tête — label vide + une cellule par munition
+  const headerCells = `
+    <div class="compare-label-cell"></div>
+    ${ammoComparison.map(ammo => `
+      <div class="compare-ammo-header">
+        ${ammo.item?.iconLink
+          ? `<img src="${escapeHTML(ammo.item.iconLink)}" alt="${escapeHTML(ammo.item.name)}" loading="lazy">`
+          : ""}
+        <span>${escapeHTML(ammo.item?.shortName || ammo.item?.name || "?")}</span>
+        <small>${escapeHTML(ammo.caliber || "")}</small>
+      </div>
+    `).join("")}
+  `;
+
+  // Lignes de stats
+  const statRows = stats.map((stat, i) => {
+    const best = bestVal(stat);
+    const isEven = i % 2 === 0;
+
+    const labelCell = `<div class="compare-label-cell ${isEven ? "compare-row-even" : ""}">${stat.label}</div>`;
+
+    const valueCells = ammoComparison.map(ammo => {
+      const val = ammo[stat.key];
+      const isBest = best !== null && val !== undefined && val !== null && val === best;
+      const display = formatVal(ammo, stat);
+
+      let barHtml = "";
+      if (stat.bar && val !== undefined && val !== null) {
+        const pct = Math.min(100, Math.round((val / stat.max) * 100));
+        barHtml = `<div class="compare-mini-bar"><div class="stat-bar-fill ${stat.bar}" style="width:${pct}%"></div></div>`;
+      }
+
+      return `
+        <div class="compare-value-cell ${isBest ? "compare-best" : ""} ${isEven ? "compare-row-even" : ""}">
+          ${barHtml}
+          <span>${display}</span>
+        </div>
+      `;
+    }).join("");
+
+    return labelCell + valueCells;
+  }).join("");
 
   content.innerHTML = `
     <button class="back-btn" onclick="displayAmmo(allAmmo, false)">← Retour</button>
 
     <h2>⚖ Comparaison</h2>
 
-    <div class="compare-table">
-      <!-- En-têtes -->
-      <div class="compare-header-row">
-        <div class="compare-label-cell"></div>
-        ${ammoComparison.map(ammo => `
-          <div class="compare-ammo-header">
-            ${ammo.item?.iconLink ? `<img src="${escapeHTML(ammo.item.iconLink)}" alt="${escapeHTML(ammo.item.name)}" loading="lazy">` : ""}
-            <span>${escapeHTML(ammo.item?.shortName || ammo.item?.name || "?")}</span>
-            <small>${escapeHTML(ammo.caliber || "")}</small>
-          </div>
-        `).join("")}
-      </div>
-
-      <!-- Lignes de stats -->
-      ${stats.map(stat => {
-        const best = bestVal(stat);
-        return `
-          <div class="compare-stat-row">
-            <div class="compare-label-cell">${stat.label}</div>
-            ${ammoComparison.map(ammo => {
-              const val = ammo[stat.key];
-              const isBest = val !== undefined && val !== null && val === best;
-              const display = formatVal(ammo, stat);
-
-              let barHtml = "";
-              if (stat.bar && val !== undefined && val !== null) {
-                const pct = Math.min(100, Math.round((val / stat.max) * 100));
-                barHtml = `<div class="compare-mini-bar"><div class="stat-bar-fill ${stat.bar}" style="width:${pct}%"></div></div>`;
-              }
-
-              return `
-                <div class="compare-value-cell ${isBest ? "compare-best" : ""}">
-                  ${barHtml}
-                  <span>${display}</span>
-                </div>
-              `;
-            }).join("")}
-          </div>
-        `;
-      }).join("")}
+    <div class="compare-table cols-${cols}">
+      ${headerCells}
+      ${statRows}
     </div>
 
     <button
       class="reset-filter-btn"
-      style="margin-top:16px"
+      style="margin-top: 4px"
       onclick="ammoComparison = []; displayAmmo(allAmmo, false)"
     >
       ✕ Vider la comparaison

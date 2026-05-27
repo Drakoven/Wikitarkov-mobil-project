@@ -842,52 +842,55 @@ button:focus-visible {
 ========================= */
 
 .compare-table {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  width: 100%;
   border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--border);
+  margin-bottom: 16px;
 }
 
-.compare-header-row {
-  display: flex;
-  background: var(--surface-2);
+/* Grid dynamique selon le nombre de colonnes (2 ou 3 munitions) */
+.compare-table.cols-2 {
+  display: grid;
+  grid-template-columns: 90px 1fr 1fr;
 }
 
-.compare-stat-row {
-  display: flex;
-  background: var(--surface);
+.compare-table.cols-3 {
+  display: grid;
+  grid-template-columns: 80px 1fr 1fr 1fr;
 }
 
-.compare-stat-row:nth-child(even) {
-  background: var(--surface-2);
-}
-
-.compare-label-cell {
-  flex: 0 0 90px;
+/* Chaque cellule occupe 1 colonne du grid */
+.compare-label-cell,
+.compare-ammo-header,
+.compare-value-cell {
   padding: 10px 8px;
-  font-size: 12px;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
+  border-bottom: 1px solid var(--border);
   border-right: 1px solid var(--border);
-}
-
-.compare-ammo-header {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 10px 6px;
+  justify-content: center;
   gap: 4px;
-  border-right: 1px solid var(--border);
+}
+
+.compare-label-cell {
+  align-items: flex-start;
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--surface-2);
+  font-weight: 600;
+}
+
+/* Ligne d'en-tête — fond légèrement différent */
+.compare-ammo-header {
+  background: var(--surface-2);
   text-align: center;
 }
 
 .compare-ammo-header img {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   object-fit: contain;
   background: var(--surface-3);
   border-radius: 8px;
@@ -895,9 +898,11 @@ button:focus-visible {
 }
 
 .compare-ammo-header span {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--accent);
+  text-align: center;
+  word-break: break-word;
 }
 
 .compare-ammo-header small {
@@ -905,27 +910,34 @@ button:focus-visible {
   color: var(--muted);
 }
 
+/* Lignes de valeurs — alternance */
 .compare-value-cell {
-  flex: 1;
-  padding: 8px 6px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
   font-size: 13px;
   font-weight: 600;
-  border-right: 1px solid var(--border);
+  text-align: center;
+  background: var(--surface);
 }
 
 .compare-value-cell.compare-best {
   color: var(--accent);
-  background: rgba(214, 181, 109, 0.08);
+  background: rgba(214, 181, 109, 0.1);
+  font-weight: 700;
+}
+
+/* Lignes paires légèrement plus sombres */
+.compare-row-even .compare-label-cell,
+.compare-row-even .compare-value-cell {
+  background: var(--surface-2);
+}
+
+.compare-row-even .compare-value-cell.compare-best {
+  background: rgba(214, 181, 109, 0.12);
 }
 
 .compare-mini-bar {
   width: 100%;
   height: 4px;
-  background: var(--surface-3);
+  background: var(--border);
   border-radius: 4px;
   overflow: hidden;
 }

@@ -922,11 +922,13 @@ async function displayTraderDetails(trader) {
     <p>Chargement des offres de ${escapeHTML(trader.name)}...</p>
   `;
 
-  // OPTIMISATION : on filtre directement par ID côté API
-  // L'ancienne version chargeait TOUS les traders pour n'en utiliser qu'un
+  // On charge tous les traders avec leurs offres complètes,
+  // puis on filtre côté client sur l'ID voulu.
+  // Le résultat est mis en cache dans allTraders pour éviter
+  // de refaire cet appel si l'utilisateur revient sur la liste.
   const query = `
     {
-      traders(id: "${trader.id}") {
+      traders {
         id
         name
         cashOffers {
@@ -977,7 +979,11 @@ async function displayTraderDetails(trader) {
       return;
     }
 
-    const fullTrader = result.data.traders[0];
+    // On met en cache tous les traders avec leurs offres
+    allTraders = result.data.traders;
+
+    // On isole le trader demandé
+    const fullTrader = allTraders.find(t => t.id === trader.id);
 
     if (!fullTrader) {
       content.innerHTML = "<p>Marchand introuvable.</p>";
@@ -988,8 +994,6 @@ async function displayTraderDetails(trader) {
     traderViewMode = "sales";
     traderSearchValue = "";
     pendingTraderSearch = "";
-
-    allTraders = allTraders.map(t => t.id === fullTrader.id ? fullTrader : t);
 
     displayTraderOffers(fullTrader);
 

@@ -363,6 +363,28 @@ button:focus-visible {
   border-radius: var(--radius);
 }
 
+/* Bouton de la section active */
+.bottom-nav button.nav-active {
+  color: #fff;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  font-weight: 700;
+  position: relative;
+}
+
+/* Trait doré sous le bouton actif */
+.bottom-nav button.nav-active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 3px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
 /* =========================
    MAPS
 ========================= */

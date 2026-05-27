@@ -107,6 +107,74 @@ const mapsData = [
 ];
 
 /* =========================
+   NAVIGATION ACTIVE
+   Met en surbrillance le bouton de la section courante
+========================= */
+
+function setActiveNav(section) {
+  const navMap = {
+    home:      0,
+    quests:    1,
+    kappa:     1,
+    items:     2,
+    maps:      3,
+    "map-detail": 3,
+    hideout:   4,
+    traders:   5,
+    ammo:      6,
+    favorites: 7
+  };
+
+  const buttons = document.querySelectorAll(".bottom-nav button");
+  buttons.forEach(btn => btn.classList.remove("nav-active"));
+
+  const index = navMap[section];
+  if (index !== undefined && buttons[index]) {
+    buttons[index].classList.add("nav-active");
+  }
+}
+
+/* =========================
+   HISTORIQUE NAVIGATEUR (History API)
+   Le bouton retour mobile navigue entre les sections
+========================= */
+
+// Enregistre une entrée dans l'historique à chaque changement de section
+function pushHistory(section, data = {}) {
+  history.pushState({ section, ...data }, "", `#${section}`);
+}
+
+// Écoute le bouton retour natif
+window.addEventListener("popstate", event => {
+  const state = event.state;
+  if (!state) { showHome(); return; }
+
+  switch (state.section) {
+    case "home":      showHome(false); break;
+    case "quests":    displayQuests(allTasks, false); break;
+    case "items":     displayItems(allItems, false); break;
+    case "maps":      showMaps(false); break;
+    case "hideout":   displayHideoutStations(allHideoutStations, false); break;
+    case "traders":   displayTraders(allTraders, false); break;
+    case "ammo":      displayAmmo(allAmmo, false); break;
+    case "favorites": showFavorites(false); break;
+    case "quest-detail":
+      const task = allTasks.find(t => t.id === state.id);
+      if (task) displayQuestDetails(task, false);
+      break;
+    case "item-detail":
+      const item = allItems.find(i => i.id === state.id);
+      if (item) displayItemDetails(item, false);
+      break;
+    case "map-detail":
+      const map = mapsData.find(m => m.name === state.name);
+      if (map) openMap(map, false);
+      break;
+    default: showHome(false);
+  }
+});
+
+/* =========================
    SÉCURITÉ — ÉCHAPPEMENT HTML
    Empêche les injections XSS depuis les données API
 ========================= */
@@ -175,8 +243,10 @@ function debounce(fn, delay) {
    QUÊTES
 ========================= */
 
-async function getQuests() {
+async function getQuests(push = true) {
   currentSection = "quests";
+  if (push) pushHistory("quests");
+  setActiveNav("quests");
   searchInput.style.display = "block";
   searchInput.value = "";
   content.innerHTML = "<p>Chargement des quêtes...</p>";
@@ -244,7 +314,9 @@ async function getQuests() {
   }
 }
 
-function displayQuests(tasks) {
+function displayQuests(tasks, push = true) {
+  if (push) pushHistory("quests");
+  setActiveNav("quests");
   content.innerHTML = "<h2>Quêtes</h2>";
 
   tasks.forEach(task => {
@@ -265,7 +337,9 @@ function displayQuests(tasks) {
   });
 }
 
-function displayQuestDetails(task) {
+function displayQuestDetails(task, push = true) {
+  if (push) pushHistory("quest-detail", { id: task.id });
+  setActiveNav("quests");
   const unlockedTasks = getUnlockedTasks(task.id);
 
   content.innerHTML = `
@@ -372,8 +446,10 @@ function displayQuestDetails(task) {
    OBJETS
 ========================= */
 
-async function showItems() {
+async function showItems(push = true) {
   currentSection = "items";
+  if (push) pushHistory("items");
+  setActiveNav("items");
   searchInput.style.display = "block";
   searchInput.value = "";
   content.innerHTML = "<p>Chargement des objets...</p>";
@@ -429,7 +505,9 @@ async function showItems() {
   }
 }
 
-function displayItems(items) {
+function displayItems(items, push = true) {
+  if (push) pushHistory("items");
+  setActiveNav("items");
   content.innerHTML = "<h2>Objets</h2>";
 
   // Limite à 100 résultats pour les performances
@@ -453,7 +531,9 @@ function displayItems(items) {
   });
 }
 
-function displayItemDetails(item) {
+function displayItemDetails(item, push = true) {
+  if (push) pushHistory("item-detail", { id: item.id });
+  setActiveNav("items");
   content.innerHTML = `
     <button class="back-btn" onclick="displayItems(allItems)">
       ← Retour
@@ -496,8 +576,10 @@ function displayItemDetails(item) {
    MAPS
 ========================= */
 
-function showMaps() {
+function showMaps(push = true) {
   currentSection = "maps";
+  if (push) pushHistory("maps");
+  setActiveNav("maps");
   searchInput.style.display = "none";
   searchInput.value = "";
 
@@ -521,8 +603,10 @@ function showMaps() {
   });
 }
 
-function openMap(map) {
+function openMap(map, push = true) {
   currentSection = "map-detail";
+  if (push) pushHistory("map-detail", { name: map.name });
+  setActiveNav("maps");
   searchInput.style.display = "none";
 
   content.innerHTML = `
@@ -553,8 +637,10 @@ function openMap(map) {
    HIDEOUT
 ========================= */
 
-async function showHideout() {
+async function showHideout(push = true) {
   currentSection = "hideout";
+  if (push) pushHistory("hideout");
+  setActiveNav("hideout");
   searchInput.style.display = "none";
   searchInput.value = "";
 
@@ -624,7 +710,9 @@ function getHideoutStationProgress(station) {
   return { completed, total, percent };
 }
 
-function displayHideoutStations(stations) {
+function displayHideoutStations(stations, push = true) {
+  if (push) pushHistory("hideout");
+  setActiveNav("hideout");
   content.innerHTML = "<h2>Hideout</h2>";
 
   stations.forEach(station => {
@@ -759,8 +847,10 @@ function getHideoutItemProgress(itemKey) {
    Requête filtrée : on ne charge que le trader demandé
 ========================= */
 
-async function showTraders() {
+async function showTraders(push = true) {
   currentSection = "traders";
+  if (push) pushHistory("traders");
+  setActiveNav("traders");
   searchInput.style.display = "none";
   searchInput.value = "";
 
@@ -800,7 +890,9 @@ async function showTraders() {
   }
 }
 
-function displayTraders(traders) {
+function displayTraders(traders, push = true) {
+  if (push) pushHistory("traders");
+  setActiveNav("traders");
   content.innerHTML = "<h2>Marchands</h2>";
 
   traders.forEach(trader => {
@@ -1117,8 +1209,10 @@ function isFavorite(id) {
   return favorites.some(fav => fav.id === id);
 }
 
-function showFavorites() {
+function showFavorites(push = true) {
   currentSection = "favorites";
+  if (push) pushHistory("favorites");
+  setActiveNav("favorites");
   searchInput.style.display = "none";
   searchInput.value = "";
 
@@ -1225,8 +1319,10 @@ function showKappaTasks() {
    ACCUEIL
 ========================= */
 
-function showHome() {
+function showHome(push = true) {
   currentSection = "home";
+  if (push) pushHistory("home");
+  setActiveNav("home");
   searchInput.style.display = "none";
   searchInput.value = "";
 
@@ -1269,8 +1365,10 @@ function showHome() {
    Cache ajouté (comme les quêtes et objets)
 ========================= */
 
-async function showAmmo() {
+async function showAmmo(push = true) {
   currentSection = "ammo";
+  if (push) pushHistory("ammo");
+  setActiveNav("ammo");
   searchInput.style.display = "block";
   searchInput.value = "";
 
@@ -1332,7 +1430,9 @@ function getArmorClassInfo(pen) {
   return { label: "Faible pénétration", className: "armor-green" };
 }
 
-function displayAmmo(ammoList) {
+function displayAmmo(ammoList, push = true) {
+  if (push) pushHistory("ammo");
+  setActiveNav("ammo");
   content.innerHTML = "<h2>Ammo / Ballistics</h2>";
 
   const calibers = [...new Set(allAmmo.map(a => a.caliber).filter(Boolean))].sort();
@@ -1402,4 +1502,6 @@ if ("serviceWorker" in navigator) {
    DÉMARRAGE
 ========================= */
 
-showHome();
+// Remplace l'état initial vide par un état "home" pour que popstate fonctionne
+history.replaceState({ section: "home" }, "", "#home");
+showHome(false);
